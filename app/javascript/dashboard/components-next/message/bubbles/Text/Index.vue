@@ -32,6 +32,10 @@ const isTemplate = computed(() => {
   return messageType.value === MESSAGE_TYPES.TEMPLATE;
 });
 
+const isOutgoing = computed(() => {
+  return messageType.value === MESSAGE_TYPES.OUTGOING;
+});
+
 const isEmpty = computed(() => {
   return !content.value && !attachments.value?.length;
 });
@@ -47,7 +51,11 @@ const handleSeeOriginal = () => {
       <span v-if="isEmpty" class="text-n-slate-11">
         {{ $t('CONVERSATION.NO_CONTENT') }}
       </span>
-      <FormattedContent v-if="renderContent" :content="renderContent" />
+      <FormattedContent
+        v-if="renderContent"
+        :content="renderContent"
+        :is-outgoing="isOutgoing"
+      />
       <TranslationToggle
         v-if="hasTranslations"
         class="-mt-3"

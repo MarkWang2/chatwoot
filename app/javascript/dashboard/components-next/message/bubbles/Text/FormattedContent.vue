@@ -11,6 +11,7 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  isOutgoing: { type: Boolean },
 });
 
 const { variant } = useMessageContext();
@@ -27,5 +28,5 @@ const formattedContent = computed(() => {
 
 <template>
   <span v-dompurify-html="formattedContent" class="prose prose-bubble" />
-  <div v-if="!paid">Not paid</div>
+  <div v-if="!paid && isOutgoing">Not paid</div>
 </template>
