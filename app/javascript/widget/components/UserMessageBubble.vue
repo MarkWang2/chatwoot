@@ -1,6 +1,8 @@
 <script>
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { getContrastingTextColor } from '@chatwoot/utils';
+import { useMapGetter } from 'dashboard/composables/store.js';
+import { mapGetters } from 'vuex';
 
 export default {
   name: 'UserMessageBubble',
@@ -16,15 +18,21 @@ export default {
   },
   setup() {
     const { formatMessage } = useMessageFormatter();
+    // const paid = useMapGetter('getPaid');
     return {
       formatMessage,
     };
   },
   computed: {
+    ...mapGetters({
+      currentUser: 'contacts/getCurrentUser',
+    }),
     textColor() {
       return getContrastingTextColor(this.widgetColor);
     },
     customMessage() {
+      this.currentUser.has_email;
+      // debugger;
       return this.formatMessage(this.message, false) + 'not paid';
     },
   },

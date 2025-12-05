@@ -3,11 +3,14 @@ import { mapGetters } from 'vuex';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { useAccount } from 'dashboard/composables/useAccount';
 import OnboardingView from '../OnboardingView.vue';
+import NotPaidOnboardingView from '../NotPaidOnboardingView.vue';
+import { useMapGetter } from 'dashboard/composables/store.js';
 import EmptyStateMessage from './EmptyStateMessage.vue';
 
 export default {
   components: {
     OnboardingView,
+    NotPaidOnboardingView,
     EmptyStateMessage,
   },
   props: {
@@ -18,10 +21,11 @@ export default {
   },
   setup() {
     const { isAdmin } = useAdmin();
-
+    const paid = useMapGetter('getPaid');
     const { accountScopedUrl } = useAccount();
 
     return {
+      paid,
       isAdmin,
       accountScopedUrl,
     };
@@ -75,7 +79,8 @@ export default {
       v-if="!inboxesList.length && !uiFlags.isFetching && !loadingChatList"
       class="clearfix mx-auto"
     >
-      <OnboardingView v-if="isAdmin" />
+      <OnboardingView v-if="isAdmin && paid" />
+      <NotPaidOnboardingView v-if="isAdmin && !paid" />
       <EmptyStateMessage v-else :message="$t('CONVERSATION.NO_INBOX_AGENT')" />
     </div>
     <!-- Show empty state images if not loading -->

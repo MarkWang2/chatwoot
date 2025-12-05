@@ -101,6 +101,8 @@ export default {
         v-dompurify-html="formatMessage(message, false)"
         class="message-content text-n-slate-12"
       />
+
+
       <EmailInput
         v-if="isTemplateEmail"
         :message-id="messageId"

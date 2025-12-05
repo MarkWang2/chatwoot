@@ -1,5 +1,4 @@
 <script setup>
-import OnboardingFeatureCard from './OnboardingFeatureCard.vue';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStoreGetters } from 'dashboard/composables/store';
@@ -44,37 +43,13 @@ const greetingMessage = computed(() => {
         }}
       </p>
     </div>
-    <OnboardingFeatureCard
-      image-src="/dashboard/images/onboarding/omnichannel-inbox.png"
-      image-alt="Omnichannel"
-      to="settings_inbox_new"
-      :title="$t('ONBOARDING.ALL_CONVERSATION.TITLE')"
-      :description="$t('ONBOARDING.ALL_CONVERSATION.DESCRIPTION')"
-      :link-text="$t('ONBOARDING.ALL_CONVERSATION.NEW_LINK')"
-    />
-    <OnboardingFeatureCard
-      image-src="/dashboard/images/onboarding/teams.png"
-      image-alt="Teams"
-      to="settings_teams_new"
-      :title="$t('ONBOARDING.TEAM_MEMBERS.TITLE')"
-      :description="$t('ONBOARDING.TEAM_MEMBERS.DESCRIPTION')"
-      :link-text="$t('ONBOARDING.TEAM_MEMBERS.NEW_LINK')"
-    />
-    <OnboardingFeatureCard
-      image-src="/dashboard/images/onboarding/canned-responses.png"
-      image-alt="Canned responses"
-      to="canned_list"
-      :title="$t('ONBOARDING.CANNED_RESPONSES.TITLE')"
-      :description="$t('ONBOARDING.CANNED_RESPONSES.DESCRIPTION')"
-      :link-text="$t('ONBOARDING.CANNED_RESPONSES.NEW_LINK')"
-    />
-    <OnboardingFeatureCard
-      image-src="/dashboard/images/onboarding/labels.png"
-      image-alt="Labels"
-      to="labels_list"
-      :title="$t('ONBOARDING.LABELS.TITLE')"
-      :description="$t('ONBOARDING.LABELS.DESCRIPTION')"
-      :link-text="$t('ONBOARDING.LABELS.NEW_LINK')"
-    />
+
+    <span> Hey，欢迎来到 Reply Bot ！</span>
+
+    <span> 对话链接，一秒激活</span>
+
+    <span>
+      感谢您的注册。请按照下面的步骤，立刻开始使用我们的平台为您的客户提供服务吧
+      <span/></span>
   </div>
 </template>
