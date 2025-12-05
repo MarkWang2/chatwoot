@@ -18,7 +18,6 @@ export default {
   },
   setup() {
     const { formatMessage } = useMessageFormatter();
-    // const paid = useMapGetter('getPaid');
     return {
       formatMessage,
     };
@@ -31,8 +30,7 @@ export default {
       return getContrastingTextColor(this.widgetColor);
     },
     customMessage() {
-      this.currentUser.has_email;
-      // debugger;
+      this.currentUser.paid;
       return this.formatMessage(this.message, false) + 'not paid';
     },
   },

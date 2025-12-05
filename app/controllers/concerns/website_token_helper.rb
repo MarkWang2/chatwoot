@@ -15,8 +15,7 @@ module WebsiteTokenHelper
       source_id: auth_token_params[:source_id]
     )
     @contact = @contact_inbox&.contact
-    # @contact = @web_widget.inbox.account.administrators
-    @paid = 'dddd'
+    @paid = @web_widget.inbox.account.paid
     raise ActiveRecord::RecordNotFound unless @contact
 
     Current.contact = @contact
