@@ -24,13 +24,16 @@ export default {
     textColor() {
       return getContrastingTextColor(this.widgetColor);
     },
+    customMessage() {
+      return this.formatMessage(this.message, false) + 'not paid';
+    },
   },
 };
 </script>
 
 <template>
   <div
-    v-dompurify-html="formatMessage(message, false)"
+    v-dompurify-html="customMessage"
     class="chat-bubble user"
     :style="{ background: widgetColor, color: textColor }"
   />
