@@ -22,11 +22,12 @@ export default {
   setup() {
     const { isAdmin } = useAdmin();
     const paid = useMapGetter('getPaid');
-    const { accountScopedUrl } = useAccount();
+    const { accountScopedUrl, currentAccount } = useAccount();
 
     return {
       paid,
       isAdmin,
+      currentAccount,
       accountScopedUrl,
     };
   },
@@ -38,6 +39,10 @@ export default {
       uiFlags: 'inboxes/getUIFlags',
       loadingChatList: 'getChatListLoadingStatus',
     }),
+    isNotPaidAccount() {
+      const account = this.currentAccount;
+      return account.paid === false;
+    },
     loadingIndicatorMessage() {
       if (this.uiFlags.isFetching) {
         return this.$t('CONVERSATION.LOADING_INBOXES');
@@ -79,8 +84,8 @@ export default {
       v-if="!inboxesList.length && !uiFlags.isFetching && !loadingChatList"
       class="clearfix mx-auto"
     >
-      <OnboardingView v-if="isAdmin && paid" />
-      <NotPaidOnboardingView v-if="isAdmin && !paid" />
+      <OnboardingView v-if="isAdmin && !isNotPaidAccount" />
+      <NotPaidOnboardingView v-if="isAdmin && isNotPaidAccount" />
       <EmptyStateMessage v-else :message="$t('CONVERSATION.NO_INBOX_AGENT')" />
     </div>
     <!-- Show empty state images if not loading -->

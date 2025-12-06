@@ -19,7 +19,7 @@ const { currentAccount } = useAccount();
 
 const isNotPaidAccount = computed(() => {
   const account = currentAccount.value;
-  return !account.paid;
+  return account.paid === false;
 });
 
 const formattedContent = computed(() => {
