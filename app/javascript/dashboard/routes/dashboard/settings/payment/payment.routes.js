@@ -21,5 +21,22 @@ export default {
         },
       ],
     },
+    // {
+    //   path: frontendURL('accounts/:accountId/plans/:plansId/settings/payment'),
+    //   meta: {
+    //     permissions: ['administrator'],
+    //   },
+    //   component: SettingsWrapper,
+    //   children: [
+    //     {
+    //       path: '',
+    //       name: 'payment_list',
+    //       component: Index,
+    //       meta: {
+    //         permissions: ['administrator'],
+    //       },
+    //     },
+    //   ],
+    // },
   ],
 };

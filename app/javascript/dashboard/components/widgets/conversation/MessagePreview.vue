@@ -2,6 +2,7 @@
 import { MESSAGE_TYPE } from 'widget/helpers/constants';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { ATTACHMENT_ICONS } from 'shared/constants/messages';
+import { useAccount } from 'dashboard/composables/useAccount';
 
 export default {
   name: 'MessagePreview',
@@ -21,11 +22,20 @@ export default {
   },
   setup() {
     const { getPlainText } = useMessageFormatter();
+    const { currentAccount } = useAccount();
     return {
       getPlainText,
+      currentAccount,
     };
   },
   computed: {
+    isNotPaidAccount() {
+      const account = this.currentAccount;
+      return account.paid === false;
+    },
+    notPaidText() {
+      return '💰️当前为免费试用仅供测试';
+    },
     messageByAgent() {
       const { message_type: messageType } = this.message;
       return messageType === MESSAGE_TYPE.OUTGOING;
@@ -92,6 +102,7 @@ export default {
     </span>
     <span v-else-if="message.content">
       {{ parsedLastMessage }}
+      <template v-if="isNotPaidAccount">{{ notPaidText }}</template>
     </span>
     <span v-else-if="message.attachments">
       <fluent-icon
