@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_12_05_122827) do
+ActiveRecord::Schema[7.1].define(version: 2025_12_05_234353) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -75,6 +75,11 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_05_122827) do
     t.jsonb "settings", default: {}
     t.boolean "paid", default: false
     t.index ["status"], name: "index_accounts_on_status"
+  end
+
+  create_table "accounts_orders", id: false, force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "order_id", null: false
   end
 
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
@@ -1031,6 +1036,16 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_05_122827) do
     t.index ["secondary_actor_type", "secondary_actor_id"], name: "uniq_secondary_actor_per_account_notifications"
     t.index ["user_id", "account_id", "snoozed_until", "read_at"], name: "idx_notifications_performance"
     t.index ["user_id"], name: "index_notifications_on_user_id"
+  end
+
+  create_table "orders", force: :cascade do |t|
+    t.string "payment_type"
+    t.decimal "amount"
+    t.string "status"
+    t.string "address"
+    t.string "order_type"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "platform_app_permissibles", force: :cascade do |t|

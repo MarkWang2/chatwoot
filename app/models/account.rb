@@ -30,6 +30,8 @@ class Account < ApplicationRecord
   include Featurable
   include CacheKeys
 
+  has_and_belongs_to_many :orders, join_table: :accounts_orders
+
   SETTINGS_PARAMS_SCHEMA = {
     'type': 'object',
     'properties':
