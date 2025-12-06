@@ -566,6 +566,12 @@ const menuItems = computed(() => {
           to: accountScopedRoute('sla_list'),
         },
         {
+          name: 'Settings Payment',
+          label: '付款',
+          icon: 'i-lucide-clock-alert',
+          to: accountScopedRoute('payment_list'),
+        },
+        {
           name: 'Settings Security',
           label: t('SIDEBAR.SECURITY'),
           icon: 'i-lucide-shield',

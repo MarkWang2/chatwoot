@@ -24,6 +24,7 @@ import teams from './teams/teams.routes';
 import customRoles from './customRoles/customRole.routes';
 import profile from './profile/profile.routes';
 import security from './security/security.routes';
+import payment from './payment/payment.routes';
 
 export default {
   routes: [
@@ -59,6 +60,7 @@ export default {
     ...macros.routes,
     ...reports.routes,
     ...sla.routes,
+    ...payment.routes,
     ...teams.routes,
     ...customRoles.routes,
     ...profile.routes,
