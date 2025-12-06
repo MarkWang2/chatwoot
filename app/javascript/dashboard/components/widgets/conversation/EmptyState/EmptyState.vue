@@ -7,6 +7,7 @@ import NotPaidOnboardingView from '../NotPaidOnboardingView.vue';
 import { useMapGetter } from 'dashboard/composables/store.js';
 import EmptyStateMessage from './EmptyStateMessage.vue';
 
+// not add notpaid
 export default {
   components: {
     OnboardingView,
