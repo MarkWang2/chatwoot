@@ -2,12 +2,9 @@
 import { ref, onMounted } from 'vue';
 import QRCode from 'qrcode';
 import axios from 'axios';
-import BuildInfo from './components/BuildInfo.vue';
+import { useAccount } from 'dashboard/composables/useAccount';
 
 export default {
-  components: {
-    BuildInfo,
-  },
   setup() {
     const order = ref({
       subWallet: '',
@@ -17,7 +14,7 @@ export default {
     });
     const qrcodeCanvas = ref(null);
     const orderId = 'order123'; // 真实项目用动态订单ID
-
+    const { accountId } = useAccount();
     // 创建订单
     const createOrder = async () => {
       const res = await axios.post('http://localhost:3000/create-order', {
@@ -53,7 +50,7 @@ export default {
       pollOrderStatus();
     });
 
-    return { order, qrcodeCanvas, copyAddress };
+    return { order, qrcodeCanvas, copyAddress, accountId };
   },
 };
 </script>
@@ -63,21 +60,35 @@ export default {
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">等待付款</h1>
-      <p class="text-gray-500">请通过下面的地址和金额完成付款，系统将自动确认和开通。</p>
+      <p class="text-gray-500">
+        请通过下面的地址和金额完成付款，系统将自动确认和开通。
+      </p>
     </div>
 
     <!-- Payment Details -->
     <div class="bg-gray-100 p-4 rounded-lg mb-6">
       <div class="flex justify-between mb-4">
-        <div class="text-sm font-semibold text-gray-700">USDT 收款钱包地址 (TRC20)</div>
+        <div class="text-sm font-semibold text-gray-700">
+          USDT 收款钱包地址 (TRC20)
+        </div>
         <button class="text-blue-500 text-sm">查看二维码</button>
       </div>
       <div class="bg-white p-4 rounded-lg shadow-md">
-        <input type="text" value="TMEoJbAxd7zNwXv3QYbJ1T2rFn7NWstBJ" readonly class="w-full bg-gray-200 p-2 rounded-md text-center text-gray-700 mb-4">
+        <input
+          type="text"
+          value="TMEoJbAxd7zNwXv3QYbJ1T2rFn7NWstBJ"
+          readonly
+          class="w-full bg-gray-200 p-2 rounded-md text-center text-gray-700 mb-4"
+        />
         <div class="flex justify-between items-center">
           <button class="text-blue-500">复制地址</button>
           <div class="text-lg font-bold">转账金额</div>
-          <input type="text" value="588" readonly class="bg-gray-200 p-2 rounded-md text-center text-gray-700">
+          <input
+            type="text"
+            value="588"
+            readonly
+            class="bg-gray-200 p-2 rounded-md text-center text-gray-700"
+          />
         </div>
       </div>
       <div class="mt-4 text-sm text-gray-600">
@@ -95,7 +106,14 @@ export default {
         <p><strong>价格:</strong> 588 USD</p>
       </div>
       <div class="mt-4 flex items-center">
-        <button class="bg-red-600 text-white py-2 px-4 rounded-md text-sm">取消此订单</button>
+        <router-link
+          :to="{ name: 'plan_list', params: { accountId: accountId } }"
+        >
+          <button class="bg-red-600 text-white py-2 px-4 rounded-md text-sm">
+            取消此订单
+          </button>
+        </router-link>
+
         <p class="ml-4 text-gray-500 text-sm">然后重新选择</p>
       </div>
     </div>

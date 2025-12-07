@@ -3,6 +3,8 @@ import { computed } from 'vue';
 import { ref, onMounted } from 'vue';
 import QRCode from 'qrcode';
 import { useAccount } from 'dashboard/composables/useAccount';
+import Button from 'dashboard/components-next/button/Button.vue';
+
 const { currentAccount } = useAccount();
 const prewWidgetUrl = computed(() => {
   const account = currentAccount.value;
@@ -19,9 +21,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div
-    class="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-10"
-  >
+  <div class="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
     <!-- Header -->
     <div class="text-center">
       <h1 class="text-2xl font-semibold text-gray-800 mb-4">
@@ -63,11 +63,12 @@ onMounted(async () => {
       <p class="text-gray-600 mb-4">
         请选择一个合适的方案，并完成付款后，即可通过您的接入渠道服务客户。我们支持银行卡、支付宝和数字货币支付。
       </p>
-      <button
-        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-      >
-        选择付费方案
-      </button>
+      <router-link :to="{ name: 'payment_list' }">
+        <Button
+          class="text-blue-500 text-sm"
+          :label="选择付费方案"
+        />
+      </router-link>
     </div>
   </div>
 </template>
