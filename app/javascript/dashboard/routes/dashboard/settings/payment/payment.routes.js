@@ -1,6 +1,6 @@
 import { frontendURL } from '../../../../helper/URLHelper';
-import Index from './Index.vue';
-import Plan from './components/Plan.vue';
+import Pay from './pages/Pay.vue';
+import Plan from './pages/Plan.vue';
 import SettingsWrapper from '../SettingsWrapper.vue';
 
 export default {
@@ -15,7 +15,7 @@ export default {
         {
           path: '',
           name: 'payment_list',
-          component: Index,
+          component: Pay,
           meta: {
             permissions: ['administrator'],
           },

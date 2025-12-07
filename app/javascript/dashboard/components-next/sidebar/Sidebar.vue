@@ -569,7 +569,7 @@ const menuItems = computed(() => {
           name: 'Settings Payment',
           label: '付款',
           icon: 'i-lucide-clock-alert',
-          to: accountScopedRoute('payment_list'),
+          to: accountScopedRoute('plan_list'),
         },
         {
           name: 'Settings Security',
