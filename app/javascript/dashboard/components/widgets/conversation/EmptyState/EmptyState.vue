@@ -95,13 +95,14 @@ export default {
       v-else-if="!uiFlags.isFetching && !loadingChatList"
       class="flex flex-col items-center justify-center h-full"
     >
+      <NotPaidOnboardingView v-if="isAdmin && isNotPaidAccount" />
       <!-- No conversations available -->
       <EmptyStateMessage
-        v-if="!allConversations.length"
+        v-if="!allConversations.length && !isNotPaidAccount"
         :message="$t('CONVERSATION.NO_MESSAGE_1')"
       />
       <EmptyStateMessage
-        v-else-if="allConversations.length && !currentChat.id"
+        v-else-if="allConversations.length && !currentChat.id && !isNotPaidAccount"
         :message="conversationMissingMessage"
       />
     </div>

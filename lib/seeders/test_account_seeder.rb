@@ -6,15 +6,15 @@
 #   Seeders::AccountSeeder.new(account: Account.find(1)).perform!
 #
 
-# Seeders::TestAccountSeeder.new(account_id:5, user_id: 4).perform!
+# Seeders::TestAccountSeeder.new(account, user).perform!
 
 ############################################################
 
 class Seeders::TestAccountSeeder
   attr_reader :account, :user
-  def initialize(account_id:, user_id:)
-    @account = Account.find(account_id)
-    @user = User.find(user_id)
+  def initialize(account:, user:)
+    @account = account
+    @user = user
   end
 
   def perform!

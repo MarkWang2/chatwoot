@@ -1,55 +1,73 @@
 <script setup>
 import { computed } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useStoreGetters } from 'dashboard/composables/store';
+import { ref, onMounted } from 'vue';
+import QRCode from 'qrcode';
+import { useAccount } from 'dashboard/composables/useAccount';
+const { currentAccount } = useAccount();
+const prewWidgetUrl = computed(() => {
+  const account = currentAccount.value;
+  return (
+    'localhost:3000/preview_web_widget?website_token=' +
+    account.preview_websiteToken
+  );
+});
+const qrCode = ref('');
 
-const getters = useStoreGetters();
-const { t } = useI18n();
-const globalConfig = computed(() => getters['globalConfig/get'].value);
-const currentUser = computed(() => getters.getCurrentUser.value);
-
-const greetingMessage = computed(() => {
-  const hours = new Date().getHours();
-  let translationKey;
-  if (hours < 12) {
-    translationKey = 'ONBOARDING.GREETING_MORNING';
-  } else if (hours < 18) {
-    translationKey = 'ONBOARDING.GREETING_AFTERNOON';
-  } else {
-    translationKey = 'ONBOARDING.GREETING_EVENING';
-  }
-  return t(translationKey, {
-    name: currentUser.value.name,
-    installationName: globalConfig.value.installationName,
-  });
+onMounted(async () => {
+  qrCode.value = await QRCode.toDataURL(prewWidgetUrl.value);
 });
 </script>
 
 <template>
   <div
-    class="min-h-screen lg:max-w-5xl max-w-4xl mx-auto grid grid-cols-2 grid-rows-[auto_1fr_1fr] auto-rows-min gap-4 p-8 w-full font-inter overflow-auto"
+    class="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-10"
   >
-    <div class="col-span-full self-start">
-      <p
-        class="text-xl font-semibold text-n-slate-12 font-interDisplay tracking-[0.3px]"
-      >
-        {{ greetingMessage }}
-      </p>
-      <p class="text-n-slate-11 max-w-2xl text-base">
-        {{
-          $t('ONBOARDING.DESCRIPTION', {
-            installationName: globalConfig.installationName,
-          })
-        }}
+    <!-- Header -->
+    <div class="text-center">
+      <h1 class="text-2xl font-semibold text-gray-800 mb-4">
+        Hey, 欢迎来到 Reply Bot！
+      </h1>
+      <p class="text-gray-600">
+        感谢您的注册。请按下面的步骤，立刻开始使用我们的平台为您的客户提供服务吧。
       </p>
     </div>
 
-    <span> Hey，欢迎来到 Reply Bot ！</span>
+    <!-- Direct link section -->
+    <div class="mt-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-2">
+        对话链接，一秒激活
+      </h2>
+      <p class="text-gray-600 mb-4">
+        使用对话链接，可以让客户在互联网上任何地方直接联系您。
+      </p>
+      <div class="flex flex-col items-center">
+        <input
+          type="text"
+          value="https://*****.talkvv.com"
+          class="p-2 border rounded-lg w-80 text-center mb-4"
+        />
+        <p class="text-gray-500">
+          您的专属对话链接（注意：免费试用链接在微信中不可用，如需在微信中使用请升级付费版）
+        </p>
+      </div>
+    </div>
 
-    <span> 对话链接，一秒激活</span>
+    <!-- QR Code Section -->
+    <div class="flex justify-center mt-6">
+      <img :src="qrCode" alt="QR Code" class="w-40 h-40" />
+    </div>
 
-    <span>
-      感谢您的注册。请按照下面的步骤，立刻开始使用我们的平台为您的客户提供服务吧
-      <span/></span>
+    <!-- Payment Options -->
+    <div class="mt-6">
+      <h3 class="text-xl font-semibold text-gray-800 mb-2">选择付费方案</h3>
+      <p class="text-gray-600 mb-4">
+        请选择一个合适的方案，并完成付款后，即可通过您的接入渠道服务客户。我们支持银行卡、支付宝和数字货币支付。
+      </p>
+      <button
+        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+      >
+        选择付费方案
+      </button>
+    </div>
   </div>
 </template>
