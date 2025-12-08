@@ -23,7 +23,7 @@ json.id @account.id
 json.locale @account.locale
 json.name @account.name
 json.support_email @account.support_email
-json.paid @account.paid
-json.preview_websiteToken @account.web_widgets[0].website_token
+json.paid @account&.paid
+json.preview_websiteToken  @account&.web_widgets[0]&.website_token
 json.status @account.status
 json.cache_keys @account.cache_keys

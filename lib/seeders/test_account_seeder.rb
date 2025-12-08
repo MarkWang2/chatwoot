@@ -22,6 +22,8 @@ class Seeders::TestAccountSeeder
   end
 
   def seed_website_inbox
+    binding.pry
+
     # channel = Channel::WebWidget.create!(account: @account, website_url: "http://localhost:3000")
     # Inbox.create!(channel: channel, account: @account, name: "Test Website")
     web_widget = Channel::WebWidget.create!(account: account, website_url: 'http://localhost:3000')
@@ -33,6 +35,7 @@ class Seeders::TestAccountSeeder
       source_id: user.id,
       inbox: inbox,
       hmac_verified: true,
+      # todo: use user email
       contact_attributes: { name: 'jane', email: 'jane@example.com', phone_number: '+2320000' }
     ).perform
 
