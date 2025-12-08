@@ -108,7 +108,7 @@ export default {
         v-dompurify-html="formatMessage(message, false)"
         class="message-content text-n-slate-12"
       />
-      <div v-if="!isPaid">iiiiNot paid</div>
+      <div v-if="!isPaid">   iiiiNot paid</div>
 
       <EmailInput
         v-if="isTemplateEmail"

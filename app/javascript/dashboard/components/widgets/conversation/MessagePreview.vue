@@ -29,7 +29,7 @@ export default {
     };
   },
   computed: {
-    isNotPaidAccount() {
+    isUnpaidAccount() {
       const account = this.currentAccount;
       return account.paid === false;
     },
@@ -102,7 +102,7 @@ export default {
     </span>
     <span v-else-if="message.content">
       {{ parsedLastMessage }}
-      <template v-if="isNotPaidAccount">{{ notPaidText }}</template>
+      <template v-if="isUnpaidAccount">{{ notPaidText }}</template>
     </span>
     <span v-else-if="message.attachments">
       <fluent-icon

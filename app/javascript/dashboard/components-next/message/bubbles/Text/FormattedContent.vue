@@ -17,7 +17,7 @@ const props = defineProps({
 const { variant } = useMessageContext();
 const { currentAccount } = useAccount();
 
-const isNotPaidAccount = computed(() => {
+const isUnpaidAccount = computed(() => {
   const account = currentAccount.value;
   return account.paid === false;
 });
@@ -32,5 +32,5 @@ const formattedContent = computed(() => {
 
 <template>
   <span v-dompurify-html="formattedContent" class="prose prose-bubble" />
-  <div v-if="isNotPaidAccount && isOutgoing">Not paid</div>
+  <div v-if="isUnpaidAccount && isOutgoing">Not paid</div>
 </template>
