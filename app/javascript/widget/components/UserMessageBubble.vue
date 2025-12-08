@@ -1,7 +1,6 @@
 <script>
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { getContrastingTextColor } from '@chatwoot/utils';
-import { useMapGetter } from 'dashboard/composables/store.js';
 import { mapGetters } from 'vuex';
 
 export default {
@@ -30,8 +29,7 @@ export default {
       return getContrastingTextColor(this.widgetColor);
     },
     customMessage() {
-      this.currentUser.paid;
-      return this.formatMessage(this.message, false) + 'not paid';
+      return this.formatMessage(this.message, false);
     },
   },
 };

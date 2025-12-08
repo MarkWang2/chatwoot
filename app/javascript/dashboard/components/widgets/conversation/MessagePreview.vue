@@ -3,9 +3,11 @@ import { MESSAGE_TYPE } from 'widget/helpers/constants';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { ATTACHMENT_ICONS } from 'shared/constants/messages';
 import { useAccount } from 'dashboard/composables/useAccount';
+import UnpaidMessage from 'shared/components/UnpaidMessage.vue';
 
 export default {
   name: 'MessagePreview',
+  components: { UnpaidMessage },
   props: {
     message: {
       type: Object,
@@ -102,7 +104,7 @@ export default {
     </span>
     <span v-else-if="message.content">
       {{ parsedLastMessage }}
-      <template v-if="isUnpaidAccount">{{ notPaidText }}</template>
+      <UnpaidMessage />
     </span>
     <span v-else-if="message.attachments">
       <fluent-icon
