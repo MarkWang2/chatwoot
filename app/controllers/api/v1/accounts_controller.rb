@@ -18,6 +18,14 @@ class Api::V1::AccountsController < Api::BaseController
 
   def show
     @latest_chatwoot_version = ::Redis::Alfred.get(::Redis::Alfred::LATEST_CHATWOOT_VERSION)
+    web_widget = @account&.web_widgets[0]
+    inbox = web_widget&.inbox
+    @website_token = web_widget&.website_token
+    contact_inbox = inbox&.contact_inboxes.first
+    if contact_inbox.present? && inbox.present?
+      payload = { source_id: contact_inbox.source_id, inbox_id: inbox.id }
+      @cw_conversation= ::Widget::TokenService.new(payload: payload).generate_token
+    end
     render 'api/v1/accounts/show', format: :json
   end
 

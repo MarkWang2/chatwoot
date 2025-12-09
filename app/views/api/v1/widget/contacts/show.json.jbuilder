@@ -3,7 +3,6 @@ json.has_email @contact.email.present?
 json.has_name @contact.name.present?
 json.has_phone_number @contact.phone_number.present?
 json.identifier @contact.identifier
-# binding.pry
+json.token @token
 json.paid @paid
-json.test 'test'
 

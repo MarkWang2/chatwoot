@@ -10,8 +10,10 @@ const prewWidgetUrl = computed(() => {
   const account = currentAccount.value;
   // todo: use real domain
   return (
-    'http://localhost:3000/preview_web_widget?website_token=' +
-    account.preview_websiteToken
+    'http://localhost:3000/widget?website_token=' +
+    account.preview_websiteToken +
+    '&cw_conversation=' +
+    account.token
   );
 });
 const qrCode = ref('');
@@ -60,12 +62,14 @@ onMounted(async () => {
 
     <!-- Payment Options -->
     <div class="mt-6">
-      <h3 class="text-xl font-semibold text-gray-800 mb-2">选择付费方案</h3>
+      <h3 class="text-xl font-semibold text-gray-800 mb-2">
+        {{ 选择付费方案 }}
+      </h3>
       <p class="text-gray-600 mb-4">
         请选择一个合适的方案，并完成付款后，即可通过您的接入渠道服务客户。我们支持银行卡、支付宝和数字货币支付。
       </p>
       <router-link :to="{ name: 'payment_list' }">
-        <Button class="text-blue-500 text-sm" :label="选择付费方案" />
+        <Button class="text-blue-500 text-sm" label="选择付费方案" />
       </router-link>
     </div>
   </div>

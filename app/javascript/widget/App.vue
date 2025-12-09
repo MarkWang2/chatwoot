@@ -87,6 +87,7 @@ export default {
       this.registerListeners();
       this.sendLoadedEvent();
     } else {
+      this.$store.dispatch('contacts/get');
       this.fetchOldConversations();
       this.fetchAvailableAgents(websiteToken);
       this.setLocale(getLocale(window.location.search));
