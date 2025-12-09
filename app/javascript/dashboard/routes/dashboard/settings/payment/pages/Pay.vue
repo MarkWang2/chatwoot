@@ -18,19 +18,23 @@ export default {
       received: 0,
       paid: false,
     });
-    const qrcodeCanvas = ref(null);
+    const qrCode = ref(null);
     const orderId = 'order123'; // 真实项目用动态订单ID
     const { accountId } = useAccount();
     // 创建订单
     const createOrder = async () => {
-      const res = await axios.post('http://localhost:3000/create-order', {
-        orderId,
-        amount: 10,
-      });
-      order.value.subWallet = res.data.subWallet;
-      order.value.amount = res.data.amount;
+      // const res = await axios.post('http://localhost:3000/create-order', {
+      //   orderId,
+      //   amount: 10,
+      // });
+      // order.value.subWallet = res.data.subWallet;
+      // order.value.amount = res.data.amount;
+      // qrCode.value = await QRCode.toDataURL('prewWidgetUrl.value');
+      // QRCode.toCanvas(qrcodeCanvas.value, 'res.data.tronUrl', { width: 200 });
+    };
 
-      QRCode.toCanvas(qrcodeCanvas.value, res.data.tronUrl, { width: 200 });
+    const createQR = async () => {
+      qrCode.value = await QRCode.toDataURL("this.prewWidgetUrl.value");
     };
 
     // 轮询订单状态
@@ -56,7 +60,7 @@ export default {
       pollOrderStatus();
     });
 
-    return { order, qrcodeCanvas, copyAddress, accountId };
+    return { order, qrCode, copyAddress, createQR, accountId };
   },
   methods: {
     async onCopy(e) {
@@ -103,7 +107,19 @@ export default {
           >
             复制地址
           </NextButton>
-          <button class="address__qr">查看二维码</button>
+
+          <NextButton
+            v-if="!qrCode"
+            faded
+            slate
+            type="button"
+            icon="i-lucide-copy"
+            class="flex-shrink-0"
+            @click="createQR"
+          >
+            查看二维码
+          </NextButton>
+          <img v-if="qrCode" :src="qrCode" alt="QR Code" class="w-40 h-40" />
         </div>
         <div class="amount-container">
           <div class="text-lg font-bold">转账金额</div>
