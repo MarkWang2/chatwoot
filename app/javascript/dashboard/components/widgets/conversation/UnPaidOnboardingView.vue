@@ -4,6 +4,8 @@ import { ref, onMounted } from 'vue';
 import QRCode from 'qrcode';
 import { useAccount } from 'dashboard/composables/useAccount';
 import Button from 'dashboard/components-next/button/Button.vue';
+import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import { useAlert } from 'dashboard/composables';
 
 const { currentAccount } = useAccount();
 const prewWidgetUrl = computed(() => {
@@ -17,6 +19,11 @@ const prewWidgetUrl = computed(() => {
   );
 });
 const qrCode = ref('');
+
+const onCopy = async () => {
+  await copyTextToClipboard(prewWidgetUrl.value);
+  useAlert('地址复制成功，请在新的页面打开');
+};
 
 onMounted(async () => {
   qrCode.value = await QRCode.toDataURL(prewWidgetUrl.value);
@@ -48,6 +55,7 @@ onMounted(async () => {
           v-model="prewWidgetUrl"
           type="text"
           class="p-2 border rounded-lg w-80 text-center mb-4"
+          @click="onCopy"
         />
         <p class="text-gray-500">
           您的专属对话链接（注意：免费试用链接在微信中不可用，如需在微信中使用请升级付费版）
