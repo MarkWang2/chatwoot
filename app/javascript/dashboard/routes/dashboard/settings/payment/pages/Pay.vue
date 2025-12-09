@@ -3,11 +3,17 @@ import { ref, onMounted } from 'vue';
 import QRCode from 'qrcode';
 import axios from 'axios';
 import { useAccount } from 'dashboard/composables/useAccount';
+import { useAlert } from 'dashboard/composables';
+import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import NextButton from 'dashboard/components-next/button/Button.vue';
 
 export default {
+  components: {
+    NextButton,
+  },
   setup() {
     const order = ref({
-      subWallet: '',
+      subWallet: 'eee',
       amount: 0,
       received: 0,
       paid: false,
@@ -52,11 +58,20 @@ export default {
 
     return { order, qrcodeCanvas, copyAddress, accountId };
   },
+  methods: {
+    async onCopy(e) {
+      e.preventDefault();
+      await copyTextToClipboard(this.order.subWallet);
+      useAlert('复制成功');
+    },
+  },
 };
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
+  <div
+    class="max-w-4xl w-full h-full mx-auto bg-white shadow-lg rounded-lg p-6"
+  >
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">等待付款</h1>
@@ -67,28 +82,32 @@ export default {
 
     <!-- Payment Details -->
     <div class="bg-gray-100 p-4 rounded-lg mb-6">
-      <div class="flex justify-between mb-4">
-        <div class="text-sm font-semibold text-gray-700">
-          USDT 收款钱包地址 (TRC20)
-        </div>
-        <button class="text-blue-500 text-sm">查看二维码</button>
-      </div>
       <div class="bg-white p-4 rounded-lg shadow-md">
-        <input
-          type="text"
-          value="TMEoJbAxd7zNwXv3QYbJ1T2rFn7NWstBJ"
-          readonly
-          class="w-full bg-gray-200 p-2 rounded-md text-center text-gray-700 mb-4"
-        />
-        <div class="flex justify-between items-center">
-          <button class="text-blue-500">复制地址</button>
-          <div class="text-lg font-bold">转账金额</div>
+        <div class="address-label">USDT 收款钱包地址 (TRC20)</div>
+        <div class="address-container">
           <input
+            id="address__input"
             type="text"
-            value="588"
+            style="margin-bottom: 0"
+            value="TMEoJbAxd7zNwXv3QYbJ1T2rFn7NWstBJ"
             readonly
-            class="bg-gray-200 p-2 rounded-md text-center text-gray-700"
+            class="address__input"
           />
+          <NextButton
+            faded
+            slate
+            type="button"
+            icon="i-lucide-copy"
+            class="flex-shrink-0"
+            @click="onCopy"
+          >
+            复制地址
+          </NextButton>
+          <button class="address__qr">查看二维码</button>
+        </div>
+        <div class="amount-container">
+          <div class="text-lg font-bold">转账金额</div>
+          <input type="text" class="amount__input" value="588" readonly />
         </div>
       </div>
       <div class="mt-4 text-sm text-gray-600">
@@ -119,3 +138,34 @@ export default {
     </div>
   </div>
 </template>
+
+<style lang="scss" scoped>
+.address-container {
+  display: inline-flex;
+  margin-bottom: 20px;
+  margin-top: 20px;
+}
+
+.address__input {
+  margin-bottom: 0 !important;
+  width: 350px !important;
+}
+
+.amount-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.amount__input {
+  width: 350px !important;
+}
+
+//.address__copy {
+//  width: 120px;
+//}
+//
+//.address__qr {
+//  width: 150px;
+//}
+</style>
