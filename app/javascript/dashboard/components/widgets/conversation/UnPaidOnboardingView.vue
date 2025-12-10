@@ -7,7 +7,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import { useAlert } from 'dashboard/composables';
 
-const { currentAccount } = useAccount();
+const { currentAccount, accountId } = useAccount();
 const prewWidgetUrl = computed(() => {
   const account = currentAccount.value;
   // todo: use real domain
@@ -31,7 +31,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
+  <div class="max-w-4xl w-full h-full p-6 bg-white shadow-lg rounded-lg mt-10">
     <!-- Header -->
     <div class="text-center">
       <h1 class="text-2xl font-semibold text-gray-800 mb-4">
@@ -76,7 +76,9 @@ onMounted(async () => {
       <p class="text-gray-600 mb-4">
         请选择一个合适的方案，并完成付款后，即可通过您的接入渠道服务客户。我们支持银行卡、支付宝和数字货币支付。
       </p>
-      <router-link :to="{ name: 'payment_list' }">
+      <router-link
+        :to="{ name: 'plan_list', params: { accountId: accountId } }"
+      >
         <Button class="text-blue-500 text-sm" label="选择付费方案" />
       </router-link>
     </div>
