@@ -34,7 +34,7 @@ export default {
     };
 
     const createQR = async () => {
-      qrCode.value = await QRCode.toDataURL("this.prewWidgetUrl.value");
+      qrCode.value = await QRCode.toDataURL('this.prewWidgetUrl.value');
     };
 
     // 轮询订单状态
@@ -126,9 +126,13 @@ export default {
           <input type="text" class="amount__input" value="588" readonly />
         </div>
       </div>
-      <div class="mt-4 text-sm text-gray-600">
-        <p>请仔细确认是否为 USDT 和 TRC20 网络。</p>
-        <p>请仔细确认收款地址和转账金额，错误地址或金额负责自负。</p>
+      <div class="inline-flex gap-16">
+        <div class="mt-4 text-sm text-gray-600">
+          <p>请仔细确认是否为 USDT 和 TRC20 网络。</p>
+          <p>请仔细确认收款地址和转账金额，错误地址或金额负责自负。</p>
+          <p>当前页面已加密，请放心付款</p>
+        </div>
+        <img src="dashboard/assets/images/logo.png" class="w-10 h-10" />
       </div>
     </div>
 
@@ -142,9 +146,9 @@ export default {
       </div>
       <div class="mt-4 flex items-center">
         <router-link
-          :to="{ name: 'plan_list', params: { accountId: accountId } }"
+          :to="{ name: 'plan_list', prams: { accountId: accountId } }"
         >
-          <button class="bg-red-600 text-white py-2 px-4 rounded-md text-sm">
+          <button class="bg-blue-600 text-white py-2 px-4 rounded-md text-sm">
             取消此订单
           </button>
         </router-link>

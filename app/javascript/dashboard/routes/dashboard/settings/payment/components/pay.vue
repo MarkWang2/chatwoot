@@ -80,9 +80,16 @@ export default {
           <input type="text" value="588" readonly class="bg-gray-200 p-2 rounded-md text-center text-gray-700">
         </div>
       </div>
-      <div class="mt-4 text-sm text-gray-600">
-        <p>请仔细确认是否为 USDT 和 TRC20 网络。</p>
-        <p>请仔细确认收款地址和转账金额，错误地址或金额负责自负。</p>
+      <div>
+        <div class="mt-4 text-sm text-gray-600">
+          <p>请仔细确认是否为 USDT 和 TRC20 网络。</p>
+          <p>请仔细确认收款地址和转账金额，错误地址或金额负责自负。</p>
+          <p>当前页面已加密，请放心付款</p>
+        </div>
+        <img
+          src="/vite-dev/dashboard/assets/images/payment/logo.png"
+          class="w-10 h-10"
+        />
       </div>
     </div>
 
@@ -97,6 +104,10 @@ export default {
       <div class="mt-4 flex items-center">
         <button class="bg-red-600 text-white py-2 px-4 rounded-md text-sm">取消此订单</button>
         <p class="ml-4 text-gray-500 text-sm">然后重新选择</p>
+        <img
+          src="/vite-dev/dashboard/assets/images/payment/pay.svg"
+          class="w-4 h-4"
+        />
       </div>
     </div>
   </div>
