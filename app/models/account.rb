@@ -12,6 +12,8 @@
 #  locale                :integer          default("en")
 #  name                  :string           not null
 #  paid                  :boolean          default(FALSE)
+#  paid_at               :datetime
+#  paid_until            :datetime
 #  settings              :jsonb
 #  status                :integer          default("active")
 #  support_email         :string(100)

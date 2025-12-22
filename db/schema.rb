@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_12_05_234353) do
+ActiveRecord::Schema[7.1].define(version: 2025_12_15_124958) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -74,12 +74,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_05_234353) do
     t.jsonb "internal_attributes", default: {}, null: false
     t.jsonb "settings", default: {}
     t.boolean "paid", default: false
+    t.datetime "paid_at"
+    t.datetime "paid_until"
     t.index ["status"], name: "index_accounts_on_status"
-  end
-
-  create_table "accounts_orders", id: false, force: :cascade do |t|
-    t.bigint "account_id", null: false
-    t.bigint "order_id", null: false
   end
 
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
@@ -1038,14 +1035,17 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_05_234353) do
     t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
-  create_table "orders", force: :cascade do |t|
+  create_table "orders", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "payment_type"
     t.decimal "amount"
     t.string "status"
-    t.string "address"
+    t.string "payment_address"
     t.string "order_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "account_id"
+    t.string "currency"
+    t.index ["account_id"], name: "index_orders_on_account_id"
   end
 
   create_table "platform_app_permissibles", force: :cascade do |t|
@@ -1272,6 +1272,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_05_234353) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "inboxes", "portals"
+  add_foreign_key "orders", "accounts"
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").
       after(:insert).
