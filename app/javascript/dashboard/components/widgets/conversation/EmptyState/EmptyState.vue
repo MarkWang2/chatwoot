@@ -3,11 +3,15 @@ import { mapGetters } from 'vuex';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { useAccount } from 'dashboard/composables/useAccount';
 import OnboardingView from '../OnboardingView.vue';
+import UnpaidOnboardingView from '../UnpaidOnboardingView.vue';
+import { useMapGetter } from 'dashboard/composables/store.js';
 import EmptyStateMessage from './EmptyStateMessage.vue';
 
+// not add notpaid
 export default {
   components: {
     OnboardingView,
+    UnpaidOnboardingView,
     EmptyStateMessage,
   },
   props: {
@@ -18,11 +22,13 @@ export default {
   },
   setup() {
     const { isAdmin } = useAdmin();
-
-    const { accountScopedUrl } = useAccount();
+    const paid = useMapGetter('getPaid');
+    const { accountScopedUrl, currentAccount } = useAccount();
 
     return {
+      paid,
       isAdmin,
+      currentAccount,
       accountScopedUrl,
     };
   },
@@ -34,6 +40,10 @@ export default {
       uiFlags: 'inboxes/getUIFlags',
       loadingChatList: 'getChatListLoadingStatus',
     }),
+    isUnpaidAccount() {
+      const account = this.currentAccount;
+      return account.paid === false;
+    },
     loadingIndicatorMessage() {
       if (this.uiFlags.isFetching) {
         return this.$t('CONVERSATION.LOADING_INBOXES');
@@ -75,7 +85,8 @@ export default {
       v-if="!inboxesList.length && !uiFlags.isFetching && !loadingChatList"
       class="clearfix mx-auto"
     >
-      <OnboardingView v-if="isAdmin" />
+      <OnboardingView v-if="isAdmin && !isUnpaidAccount" />
+      <UnpaidOnboardingView v-if="isAdmin && isUnpaidAccount" />
       <EmptyStateMessage v-else :message="$t('CONVERSATION.NO_INBOX_AGENT')" />
     </div>
     <!-- Show empty state images if not loading -->
@@ -84,13 +95,14 @@ export default {
       v-else-if="!uiFlags.isFetching && !loadingChatList"
       class="flex flex-col items-center justify-center h-full"
     >
+      <UnpaidOnboardingView v-if="isAdmin && isUnpaidAccount" />
       <!-- No conversations available -->
       <EmptyStateMessage
-        v-if="!allConversations.length"
+        v-if="!allConversations.length && !isUnpaidAccount"
         :message="$t('CONVERSATION.NO_MESSAGE_1')"
       />
       <EmptyStateMessage
-        v-else-if="allConversations.length && !currentChat.id"
+        v-else-if="allConversations.length && !currentChat.id && !isUnpaidAccount"
         :message="conversationMissingMessage"
       />
     </div>

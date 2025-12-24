@@ -79,6 +79,7 @@ class DeviseOverrides::OmniauthCallbacksController < DeviseTokenAuth::OmniauthCa
       locale: I18n.locale,
       confirmed: auth_hash['info']['email_verified']
     ).perform
+    # Seeders::TestAccountSeeder.new(account: @account, user: @user).perform!
     Avatar::AvatarFromUrlJob.perform_later(@resource, auth_hash['info']['image'])
   end
 

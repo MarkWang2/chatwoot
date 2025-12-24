@@ -20,7 +20,8 @@ class Api::V2::AccountsController < Api::BaseController
       locale: account_params[:locale],
       user: current_user
     ).perform
-
+    # check when use v2 to create account
+    # Seeders::TestAccountSeeder.new(account: @account, user: @user).perform!
     fetch_account_and_user_info
     update_account_info if @account.present?
 

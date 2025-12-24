@@ -11,6 +11,10 @@ class WidgetsController < ActionController::Base
   before_action :build_contact
   after_action :allow_iframe_requests
 
+  def show_web_widgets
+    permitted_params[:website_token]
+  end
+
   private
 
   def set_global_config

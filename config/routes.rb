@@ -27,6 +27,8 @@ Rails.application.routes.draw do
     get '/app/accounts/:account_id/settings/billing', to: 'dashboard#index', as: 'app_account_billing_settings'
 
     resource :widget, only: [:show]
+    get 'preview_web_widget', to: 'widgets#show_web_widgets'
+
     namespace :survey do
       resources :responses, only: [:show]
     end

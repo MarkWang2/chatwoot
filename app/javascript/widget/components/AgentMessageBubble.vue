@@ -7,6 +7,8 @@ import ChatArticle from './template/Article.vue';
 import EmailInput from './template/EmailInput.vue';
 import CustomerSatisfaction from 'shared/components/CustomerSatisfaction.vue';
 import IntegrationCard from './template/IntegrationCard.vue';
+import UnpaidMessage from 'shared/components/UnpaidMessage.vue';
+import { mapGetters } from 'vuex';
 
 export default {
   name: 'AgentMessageBubble',
@@ -16,6 +18,7 @@ export default {
     ChatForm,
     ChatOptions,
     EmailInput,
+    UnpaidMessage,
     CustomerSatisfaction,
     IntegrationCard,
   },
@@ -40,8 +43,14 @@ export default {
     };
   },
   computed: {
+    ...mapGetters({
+      currentUser: 'contacts/getCurrentUser',
+    }),
     isTemplate() {
       return this.messageType === 3;
+    },
+    isPaid() {
+      return this.currentUser.paid;
     },
     isTemplateEmail() {
       return this.contentType === 'input_email';
@@ -101,6 +110,10 @@ export default {
         v-dompurify-html="formatMessage(message, false)"
         class="message-content text-n-slate-12"
       />
+      <div v-if="!isPaid" class="flex flex-col gap-1 text-sm">
+        <UnpaidMessage />
+      </div>
+
       <EmailInput
         v-if="isTemplateEmail"
         :message-id="messageId"

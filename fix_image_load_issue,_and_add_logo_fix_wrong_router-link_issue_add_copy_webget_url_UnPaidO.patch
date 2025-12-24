@@ -1,0 +1,4290 @@
+Subject: [PATCH] fix image load issue, and add logo
+fix wrong router-link issue
+add copy webget url UnPaidOnboardingView.vue
+make qr work
+make copy work
+use DEFAULT_LOCALE=zh_CN
+use emed chat box
+update and refactor UnpaidMessage
+addjust css for FormattedContent.vue
+rename not paid to unpaid
+fix create account innit inbox issue
+refactor code and use plan_list as default router
+add payment related functions
+add prewview webwget
+add preview_web_widget allow custom to preview chat
+add not paid message to MessagePreview
+add tron
+add payment to routes
+add is not paid for EmptyState
+add orders table
+use account to store paid info
+add NotPaidOnboardingView
+add NotPaidOnboardingView
+add not paid place holder for UserMessageBubble
+refactor: Add getPaid method to handle not paid message
+Add paid field to user, and add some code for testing
+---
+Index: .env
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.env b/.env
+new file mode 100644
+--- /dev/null	(revision 1bdd79ae96ed44f59068775c953bb3de48886cbf)
++++ b/.env	(revision 1bdd79ae96ed44f59068775c953bb3de48886cbf)
+@@ -0,0 +1,276 @@
++# Learn about the various environment variables at
++# https://www.chatwoot.com/docs/self-hosted/configuration/environment-variables/#rails-production-variables
++
++# Used to verify the integrity of signed cookies. so ensure a secure value is set
++# SECRET_KEY_BASE should be alphanumeric. Avoid special characters or symbols.
++# Use `rake secret` to generate this variable
++SECRET_KEY_BASE=replace_with_lengthy_secure_hex
++
++# Active Record Encryption keys (required for MFA/2FA functionality)
++# Generate these keys by running: rails db:encryption:init
++# IMPORTANT: Use different keys for each environment (development, staging, production)
++# ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=
++# ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=
++# ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=
++
++# Replace with the URL you are planning to use for your app
++FRONTEND_URL=http://0.0.0.0:3000
++# To use a dedicated URL for help center pages
++# HELPCENTER_URL=http://0.0.0.0:3000
++
++# If the variable is set, all non-authenticated pages would fallback to the default locale.
++# Whenever a new account is created, the default language will be DEFAULT_LOCALE instead of en
++DEFAULT_LOCALE=zh_CN
++
++# If you plan to use CDN for your assets, set Asset CDN Host
++ASSET_CDN_HOST=
++
++# Force all access to the app over SSL, default is set to false
++FORCE_SSL=false
++
++# This lets you control new sign ups on your chatwoot installation
++# true : default option, allows sign ups
++# false : disables all the end points related to sign ups
++# api_only: disables the UI for signup, but you can create sign ups via the account apis
++ENABLE_ACCOUNT_SIGNUP=true
++
++# Redis config
++# specify the configs via single URL or individual variables
++# ref: https://www.iana.org/assignments/uri-schemes/prov/redis
++# You can also use the following format for the URL: redis://:password@host:port/db_number
++REDIS_URL=redis://127.0.0.1:6379
++# If you are using docker-compose, set this variable's value to be any string,
++# which will be the password for the redis service running inside the docker-compose
++# to make it secure
++REDIS_PASSWORD=
++# Redis Sentinel can be used by passing list of sentinel host and ports e,g. sentinel_host1:port1,sentinel_host2:port2
++REDIS_SENTINELS=
++# Redis sentinel master name is required when using sentinel, default value is "mymaster".
++# You can find list of master using "SENTINEL masters" command
++REDIS_SENTINEL_MASTER_NAME=
++
++# By default Chatwoot will pass REDIS_PASSWORD as the password value for sentinels
++# Use the following environment variable to customize passwords for sentinels.
++# Use empty string if sentinels are configured with out passwords
++# REDIS_SENTINEL_PASSWORD=
++
++# Redis premium breakage in heroku fix
++# enable the following configuration
++# ref: https://github.com/chatwoot/chatwoot/issues/2420
++# REDIS_OPENSSL_VERIFY_MODE=none
++
++# Postgres Database config variables
++# You can leave POSTGRES_DATABASE blank. The default name of
++# the database in the production environment is chatwoot_production
++# POSTGRES_DATABASE=
++POSTGRES_HOST=localhost
++POSTGRES_USERNAME=postgres
++POSTGRES_PASSWORD=
++RAILS_ENV=development
++# Changes the Postgres query timeout limit. The default is 14 seconds. Modify only when required.
++# POSTGRES_STATEMENT_TIMEOUT=14s
++RAILS_MAX_THREADS=5
++
++# The email from which all outgoing emails are sent
++# could user either  `email@yourdomain.com` or `BrandName <email@yourdomain.com>`
++MAILER_SENDER_EMAIL=Chatwoot <accounts@chatwoot.com>
++
++#SMTP domain key is set up for HELO checking
++SMTP_DOMAIN=chatwoot.com
++# Set the value to "mailhog" if using docker-compose for development environments,
++# Set the value as "localhost" or your SMTP address in other environments
++# If SMTP_ADDRESS is empty, Chatwoot would try to use sendmail(postfix)
++SMTP_ADDRESS=
++SMTP_PORT=1025
++SMTP_USERNAME=
++SMTP_PASSWORD=
++# plain,login,cram_md5
++SMTP_AUTHENTICATION=
++SMTP_ENABLE_STARTTLS_AUTO=true
++# Can be: 'none', 'peer', 'client_once', 'fail_if_no_peer_cert', see http://api.rubyonrails.org/classes/ActionMailer/Base.html
++SMTP_OPENSSL_VERIFY_MODE=peer
++# Comment out the following environment variables if required by your SMTP server
++# SMTP_TLS=
++# SMTP_SSL=
++# SMTP_OPEN_TIMEOUT
++# SMTP_READ_TIMEOUT
++
++# Mail Incoming
++# This is the domain set for the reply emails when conversation continuity is enabled
++MAILER_INBOUND_EMAIL_DOMAIN=
++# Set this to the appropriate ingress channel with regards to incoming emails
++# Possible values are :
++# relay for Exim, Postfix, Qmail
++# mailgun for Mailgun
++# mandrill for Mandrill
++# postmark for Postmark
++# sendgrid for Sendgrid
++# ses for Amazon SES
++RAILS_INBOUND_EMAIL_SERVICE=
++# Use one of the following based on the email ingress service
++# Ref: https://edgeguides.rubyonrails.org/action_mailbox_basics.html
++# Set this to a password of your choice and use it in the Inbound webhook
++RAILS_INBOUND_EMAIL_PASSWORD=
++
++MAILGUN_INGRESS_SIGNING_KEY=
++MANDRILL_INGRESS_API_KEY=
++
++# SNS topic ARN for ActionMailbox (format: arn:aws:sns:region:account-id:topic-name)
++# Configure only if the rails_inbound_email_service = ses
++ACTION_MAILBOX_SES_SNS_TOPIC=
++
++# Creating Your Inbound Webhook Instructions for Postmark and Sendgrid:
++# Inbound webhook URL format:
++#    https://actionmailbox:[YOUR_RAILS_INBOUND_EMAIL_PASSWORD]@[YOUR_CHATWOOT_DOMAIN.COM]/rails/action_mailbox/[RAILS_INBOUND_EMAIL_SERVICE]/inbound_emails
++# Note: Replace the values inside the brackets; do not include the brackets themselves.
++# Example: https://actionmailbox:mYRandomPassword3@chatwoot.example.com/rails/action_mailbox/postmark/inbound_emails
++# For Postmark
++# Ensure the 'Include raw email content in JSON payload' checkbox is selected in the inbound webhook section.
++
++# Storage
++ACTIVE_STORAGE_SERVICE=local
++
++# Amazon S3
++# documentation: https://www.chatwoot.com/docs/configuring-s3-bucket-as-cloud-storage
++S3_BUCKET_NAME=
++AWS_ACCESS_KEY_ID=
++AWS_SECRET_ACCESS_KEY=
++AWS_REGION=
++
++# Log settings
++# Disable if you want to write logs to a file
++RAILS_LOG_TO_STDOUT=true
++LOG_LEVEL=info
++LOG_SIZE=500
++# Configure this environment variable if you want to use lograge instead of rails logger
++#LOGRAGE_ENABLED=true
++
++### This environment variables are only required if you are setting up social media channels
++
++# Facebook
++# documentation: https://www.chatwoot.com/docs/facebook-setup
++FB_VERIFY_TOKEN=
++FB_APP_SECRET=
++FB_APP_ID=
++
++# https://developers.facebook.com/docs/messenger-platform/instagram/get-started#app-dashboard
++IG_VERIFY_TOKEN=
++
++# Twitter
++# documentation: https://www.chatwoot.com/docs/twitter-app-setup
++TWITTER_APP_ID=
++TWITTER_CONSUMER_KEY=
++TWITTER_CONSUMER_SECRET=
++TWITTER_ENVIRONMENT=
++
++#slack integration
++SLACK_CLIENT_ID=
++SLACK_CLIENT_SECRET=
++
++# Google OAuth
++GOOGLE_OAUTH_CLIENT_ID=
++GOOGLE_OAUTH_CLIENT_SECRET=
++GOOGLE_OAUTH_CALLBACK_URL=
++
++### Change this env variable only if you are using a custom build mobile app
++## Mobile app env variables
++IOS_APP_ID=L7YLMN4634.com.chatwoot.app
++ANDROID_BUNDLE_ID=com.chatwoot.app
++
++# https://developers.google.com/android/guides/client-auth (use keytool to print the fingerprint in the first section)
++ANDROID_SHA256_CERT_FINGERPRINT=AC:73:8E:DE:EB:56:EA:CC:10:87:02:A7:65:37:7B:38:D4:5D:D4:53:F8:3B:FB:D3:C6:28:64:1D:AA:08:1E:D8
++
++### Smart App Banner
++# https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/PromotingAppswithAppBanners/PromotingAppswithAppBanners.html
++# You can find your app-id in https://itunesconnect.apple.com
++#IOS_APP_IDENTIFIER=1495796682
++
++## Push Notification
++## generate a new key value here : https://d3v.one/vapid-key-generator/
++# VAPID_PUBLIC_KEY=
++# VAPID_PRIVATE_KEY=
++#
++# for mobile apps
++# FCM_SERVER_KEY=
++
++### APM and Error Monitoring configurations
++## Elastic APM
++## https://www.elastic.co/guide/en/apm/agent/ruby/current/getting-started-rails.html
++# ELASTIC_APM_SERVER_URL=
++# ELASTIC_APM_SECRET_TOKEN=
++
++## Sentry
++# SENTRY_DSN=
++
++
++## Scout
++## https://scoutapm.com/docs/ruby/configuration
++# SCOUT_KEY=YOURKEY
++# SCOUT_NAME=YOURAPPNAME (Production)
++# SCOUT_MONITOR=true
++
++## NewRelic
++# https://docs.newrelic.com/docs/agents/ruby-agent/configuration/ruby-agent-configuration/
++# NEW_RELIC_LICENSE_KEY=
++# Set this to true to allow newrelic apm to send logs.
++# This is turned off by default.
++# NEW_RELIC_APPLICATION_LOGGING_ENABLED=
++
++## Datadog
++## https://github.com/DataDog/dd-trace-rb/blob/master/docs/GettingStarted.md#environment-variables
++# DD_TRACE_AGENT_URL=
++
++
++# MaxMindDB API key to download GeoLite2 City database
++# IP_LOOKUP_API_KEY=
++
++## Rack Attack configuration
++## To prevent and throttle abusive requests
++# ENABLE_RACK_ATTACK=true
++# RACK_ATTACK_LIMIT=300
++# ENABLE_RACK_ATTACK_WIDGET_API=true
++# Comma-separated list of trusted IPs that bypass Rack Attack throttling rules
++# RACK_ATTACK_ALLOWED_IPS=127.0.0.1,::1,192.168.0.10
++
++## Running chatwoot as an API only server
++## setting this value to true will disable the frontend dashboard endpoints
++# CW_API_ONLY_SERVER=false
++
++## Development Only Config
++# if you want to use letter_opener for local emails
++# LETTER_OPENER=true
++# meant to be used in github codespaces
++# WEBPACKER_DEV_SERVER_PUBLIC=
++
++# If you want to use official mobile app,
++# the notifications would be relayed via a Chatwoot server
++ENABLE_PUSH_RELAY_SERVER=true
++
++# Stripe API key
++STRIPE_SECRET_KEY=
++STRIPE_WEBHOOK_SECRET=
++
++# Set to true if you want to upload files to cloud storage using the signed url
++# Make sure to follow https://edgeguides.rubyonrails.org/active_storage_overview.html#cross-origin-resource-sharing-cors-configuration on the cloud storage after setting this to true.
++DIRECT_UPLOADS_ENABLED=
++
++#MS OAUTH creds
++AZURE_APP_ID=
++AZURE_APP_SECRET=
++
++## Advanced configurations
++## Change these values to fine tune performance
++# control the concurrency setting of sidekiq
++# SIDEKIQ_CONCURRENCY=10
++# Enable verbose logging each time a job is dequeued in Sidekiq
++# ENABLE_SIDEKIQ_DEQUEUE_LOGGER=false
++
++
++# AI powered features
++## OpenAI key
++# OPENAI_API_KEY=
++
++# Housekeeping/Performance related configurations
++# Set to true if you want to remove stale contact inboxes
++# contact_inboxes with no conversation older than 90 days will be removed
++# REMOVE_STALE_CONTACT_INBOX_JOB_STATUS=false
+Index: .gitignore
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.gitignore b/.gitignore
+--- a/.gitignore	(revision 1df5fd513aaf08da2e1f100c95f435d7d978ad8e)
++++ b/.gitignore	(revision de8465420e41205414a600f01fceb4205707f4ba)
+@@ -28,7 +28,6 @@
+ *.rdb
+ 
+ # Ignore env files
+-.env
+ 
+ public/uploads
+ public/packs*
+Index: .nvmrc
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.nvmrc b/.nvmrc
+--- a/.nvmrc	(revision 1df5fd513aaf08da2e1f100c95f435d7d978ad8e)
++++ b/.nvmrc	(revision de8465420e41205414a600f01fceb4205707f4ba)
+@@ -1,1 +1,1 @@
+-20.5.1
+\ No newline at end of file
++22.17.0
+Index: app/controllers/dashboard_controller.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/controllers/dashboard_controller.rb b/app/controllers/dashboard_controller.rb
+--- a/app/controllers/dashboard_controller.rb	(revision 1df5fd513aaf08da2e1f100c95f435d7d978ad8e)
++++ b/app/controllers/dashboard_controller.rb	(revision de8465420e41205414a600f01fceb4205707f4ba)
+@@ -70,7 +70,7 @@
+     {
+       APP_VERSION: Chatwoot.config[:version],
+       VAPID_PUBLIC_KEY: VapidService.public_key,
+-      ENABLE_ACCOUNT_SIGNUP: GlobalConfigService.load('ENABLE_ACCOUNT_SIGNUP', 'false'),
++      ENABLE_ACCOUNT_SIGNUP: true, # GlobalConfigService.load('ENABLE_ACCOUNT_SIGNUP', 'false'),
+       FB_APP_ID: GlobalConfigService.load('FB_APP_ID', ''),
+       INSTAGRAM_APP_ID: GlobalConfigService.load('INSTAGRAM_APP_ID', ''),
+       FACEBOOK_API_VERSION: GlobalConfigService.load('FACEBOOK_API_VERSION', 'v18.0'),
+Index: app/javascript/dashboard/components-next/message/bubbles/Text/FormattedContent.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/components-next/message/bubbles/Text/FormattedContent.vue b/app/javascript/dashboard/components-next/message/bubbles/Text/FormattedContent.vue
+--- a/app/javascript/dashboard/components-next/message/bubbles/Text/FormattedContent.vue	(revision 1df5fd513aaf08da2e1f100c95f435d7d978ad8e)
++++ b/app/javascript/dashboard/components-next/message/bubbles/Text/FormattedContent.vue	(revision 7c9f62c6fdf867eaf6bb39fd0ce2a7a13ccf751f)
+@@ -4,25 +4,36 @@
+ 
+ import MessageFormatter from 'shared/helpers/MessageFormatter.js';
+ import { MESSAGE_VARIANTS } from '../../constants';
++import { useAccount } from 'dashboard/composables/useAccount';
++import UnpaidMessage from 'shared/components/UnpaidMessage.vue';
+ 
+ const props = defineProps({
+   content: {
+     type: String,
+     required: true,
+   },
++  isOutgoing: { type: Boolean },
+ });
+ 
+ const { variant } = useMessageContext();
++const { currentAccount } = useAccount();
++
++const isUnpaidAccount = computed(() => {
++  const account = currentAccount.value;
++  return account.paid === false;
++});
+ 
+ const formattedContent = computed(() => {
+   if (variant.value === MESSAGE_VARIANTS.ACTIVITY) {
+     return props.content;
+   }
+-
+   return new MessageFormatter(props.content).formattedMessage;
+ });
+ </script>
+ 
+ <template>
+   <span v-dompurify-html="formattedContent" class="prose prose-bubble" />
++  <div v-if="isUnpaidAccount && isOutgoing" class="flex flex-col gap-1 text-sm">
++    <UnpaidMessage />
++  </div>
+ </template>
+Index: app/models/super_admin.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/models/super_admin.rb b/app/models/super_admin.rb
+--- a/app/models/super_admin.rb	(revision 1df5fd513aaf08da2e1f100c95f435d7d978ad8e)
++++ b/app/models/super_admin.rb	(revision de8465420e41205414a600f01fceb4205707f4ba)
+@@ -21,6 +21,7 @@
+ #  otp_backup_codes       :text
+ #  otp_required_for_login :boolean          default(FALSE)
+ #  otp_secret             :string
++#  paid                   :boolean          default(FALSE)
+ #  provider               :string           default("email"), not null
+ #  pubsub_token           :string
+ #  remember_created_at    :datetime
+Index: app/models/user.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/models/user.rb b/app/models/user.rb
+--- a/app/models/user.rb	(revision 1df5fd513aaf08da2e1f100c95f435d7d978ad8e)
++++ b/app/models/user.rb	(revision de8465420e41205414a600f01fceb4205707f4ba)
+@@ -21,6 +21,7 @@
+ #  otp_backup_codes       :text
+ #  otp_required_for_login :boolean          default(FALSE)
+ #  otp_secret             :string
++#  paid                   :boolean          default(FALSE)
+ #  provider               :string           default("email"), not null
+ #  pubsub_token           :string
+ #  remember_created_at    :datetime
+@@ -45,6 +46,7 @@
+ #  index_users_on_uid_and_provider        (uid,provider) UNIQUE
+ #
+ 
++### paid
+ class User < ApplicationRecord
+   include AccessTokenable
+   include Avatarable
+@@ -135,7 +137,7 @@
+   end
+ 
+   def serializable_hash(options = nil)
+-    super(options).merge(confirmed: confirmed?)
++    super(options).merge(confirmed: confirmed?, paid: paid)
+   end
+ 
+   def push_event_data
+@@ -144,6 +146,7 @@
+       name: name,
+       available_name: available_name,
+       avatar_url: avatar_url,
++      paid: paid,
+       type: 'user',
+       availability_status: availability_status,
+       thumbnail: avatar_url
+Index: app/views/api/v1/models/_user.json.jbuilder
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/views/api/v1/models/_user.json.jbuilder b/app/views/api/v1/models/_user.json.jbuilder
+--- a/app/views/api/v1/models/_user.json.jbuilder	(revision 1df5fd513aaf08da2e1f100c95f435d7d978ad8e)
++++ b/app/views/api/v1/models/_user.json.jbuilder	(revision e8ed7150a9c40ec2e0e649ee3e1babaa044ac11a)
+@@ -3,6 +3,7 @@
+ json.available_name resource.available_name
+ json.avatar_url resource.avatar_url
+ json.confirmed resource.confirmed?
++json.paid resource&.paid
+ json.display_name resource.display_name
+ json.message_signature resource.message_signature
+ json.email resource.email
+Index: db/migrate/20251204064425_add_paid_to_users.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/db/migrate/20251204064425_add_paid_to_users.rb b/db/migrate/20251204064425_add_paid_to_users.rb
+new file mode 100644
+--- /dev/null	(revision de8465420e41205414a600f01fceb4205707f4ba)
++++ b/db/migrate/20251204064425_add_paid_to_users.rb	(revision de8465420e41205414a600f01fceb4205707f4ba)
+@@ -0,0 +1,5 @@
++class AddPaidToUsers < ActiveRecord::Migration[7.1]
++  def change
++    add_column :users, :paid, :boolean, default: false
++  end
++end
+Index: db/schema.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/db/schema.rb b/db/schema.rb
+--- a/db/schema.rb	(revision 1df5fd513aaf08da2e1f100c95f435d7d978ad8e)
++++ b/db/schema.rb	(revision 1f48dfb613fb6df481ecabe469e4caf838115a7c)
+@@ -10,7 +10,7 @@
+ #
+ # It's strongly recommended that you check this file into your version control system.
+ 
+-ActiveRecord::Schema[7.1].define(version: 2025_11_19_161025) do
++ActiveRecord::Schema[7.1].define(version: 2025_12_05_234353) do
+   # These extensions should be enabled to support this database
+   enable_extension "pg_stat_statements"
+   enable_extension "pg_trgm"
+@@ -73,9 +73,15 @@
+     t.integer "status", default: 0
+     t.jsonb "internal_attributes", default: {}, null: false
+     t.jsonb "settings", default: {}
++    t.boolean "paid", default: false
+     t.index ["status"], name: "index_accounts_on_status"
+   end
+ 
++  create_table "accounts_orders", id: false, force: :cascade do |t|
++    t.bigint "account_id", null: false
++    t.bigint "order_id", null: false
++  end
++
+   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
+     t.integer "status", default: 0, null: false
+     t.string "message_id", null: false
+@@ -1032,6 +1038,16 @@
+     t.index ["user_id"], name: "index_notifications_on_user_id"
+   end
+ 
++  create_table "orders", force: :cascade do |t|
++    t.string "payment_type"
++    t.decimal "amount"
++    t.string "status"
++    t.string "address"
++    t.string "order_type"
++    t.datetime "created_at", null: false
++    t.datetime "updated_at", null: false
++  end
++
+   create_table "platform_app_permissibles", force: :cascade do |t|
+     t.bigint "platform_app_id", null: false
+     t.string "permissible_type", null: false
+@@ -1216,6 +1232,7 @@
+     t.integer "consumed_timestep"
+     t.boolean "otp_required_for_login", default: false
+     t.text "otp_backup_codes"
++    t.boolean "paid", default: false
+     t.index ["email"], name: "index_users_on_email"
+     t.index ["otp_required_for_login"], name: "index_users_on_otp_required_for_login"
+     t.index ["otp_secret"], name: "index_users_on_otp_secret", unique: true
+Index: test.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/test.html b/test.html
+new file mode 100644
+--- /dev/null	(revision d2464356e88df3e6ec866a4da5069425c106e094)
++++ b/test.html	(revision d2464356e88df3e6ec866a4da5069425c106e094)
+@@ -0,0 +1,24 @@
++<!DOCTYPE html>
++<html lang="en">
++<head>
++  <meta charset="UTF-8">
++  <title>Title</title>
++</head>
++<body>
++<script>
++  (function(d,t) {
++    var BASE_URL="http://0.0.0.0:3000";
++    var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
++    g.src=BASE_URL+"/packs/js/sdk.js";
++    g.async = true;
++    s.parentNode.insertBefore(g,s);
++    g.onload=function(){
++      window.chatwootSDK.run({
++        websiteToken: '61U96mW18gymKx9REe5uoiHF',
++        baseUrl: BASE_URL
++      })
++    }
++  })(document,"script");
++</script>
++</body>
++</html>
+Index: app/javascript/dashboard/store/modules/auth.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/store/modules/auth.js b/app/javascript/dashboard/store/modules/auth.js
+--- a/app/javascript/dashboard/store/modules/auth.js	(revision de8465420e41205414a600f01fceb4205707f4ba)
++++ b/app/javascript/dashboard/store/modules/auth.js	(revision b7523f867e4e88fa3300abcc0e65107cba4e9925)
+@@ -28,6 +28,10 @@
+     return $state.currentUser.id;
+   },
+ 
++  getPaid($state) {
++    return $state.currentUser.paid;
++  },
++
+   getUISettings($state) {
+     return $state.currentUser.ui_settings || {};
+   },
+Index: app/javascript/widget/components/UserMessageBubble.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/widget/components/UserMessageBubble.vue b/app/javascript/widget/components/UserMessageBubble.vue
+--- a/app/javascript/widget/components/UserMessageBubble.vue	(revision b7523f867e4e88fa3300abcc0e65107cba4e9925)
++++ b/app/javascript/widget/components/UserMessageBubble.vue	(revision 7c9f62c6fdf867eaf6bb39fd0ce2a7a13ccf751f)
+@@ -1,6 +1,7 @@
+ <script>
+ import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
+ import { getContrastingTextColor } from '@chatwoot/utils';
++import { mapGetters } from 'vuex';
+ 
+ export default {
+   name: 'UserMessageBubble',
+@@ -21,16 +22,22 @@
+     };
+   },
+   computed: {
++    ...mapGetters({
++      currentUser: 'contacts/getCurrentUser',
++    }),
+     textColor() {
+       return getContrastingTextColor(this.widgetColor);
+     },
++    customMessage() {
++      return this.formatMessage(this.message, false);
++    },
+   },
+ };
+ </script>
+ 
+ <template>
+   <div
+-    v-dompurify-html="formatMessage(message, false)"
++    v-dompurify-html="customMessage"
+     class="chat-bubble user"
+     :style="{ background: widgetColor, color: textColor }"
+   />
+Index: Procfile.dev
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Procfile.dev b/Procfile.dev
+--- a/Procfile.dev	(revision 183e062ba44f7f73013249149f487a0b2719be8a)
++++ b/Procfile.dev	(revision 96f8c806e777f23dd7b356c7e9e97f35b628b73f)
+@@ -1,4 +1,4 @@
+-backend: bin/rails s -p 3000
++# backend: bin/rails s -p 3000
+ # https://github.com/mperham/sidekiq/issues/3090#issuecomment-389748695
+ worker: dotenv bundle exec sidekiq -C config/sidekiq.yml
+ vite: bin/vite dev
+Index: app/javascript/dashboard/components/widgets/conversation/EmptyState/EmptyState.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/components/widgets/conversation/EmptyState/EmptyState.vue b/app/javascript/dashboard/components/widgets/conversation/EmptyState/EmptyState.vue
+--- a/app/javascript/dashboard/components/widgets/conversation/EmptyState/EmptyState.vue	(revision 183e062ba44f7f73013249149f487a0b2719be8a)
++++ b/app/javascript/dashboard/components/widgets/conversation/EmptyState/EmptyState.vue	(revision 137ef736d8aa9ebddb5cb1076269b05327e4563e)
+@@ -3,11 +3,15 @@
+ import { useAdmin } from 'dashboard/composables/useAdmin';
+ import { useAccount } from 'dashboard/composables/useAccount';
+ import OnboardingView from '../OnboardingView.vue';
++import UnpaidOnboardingView from '../UnpaidOnboardingView.vue';
++import { useMapGetter } from 'dashboard/composables/store.js';
+ import EmptyStateMessage from './EmptyStateMessage.vue';
+ 
++// not add notpaid
+ export default {
+   components: {
+     OnboardingView,
++    UnpaidOnboardingView,
+     EmptyStateMessage,
+   },
+   props: {
+@@ -18,11 +22,13 @@
+   },
+   setup() {
+     const { isAdmin } = useAdmin();
+-
+-    const { accountScopedUrl } = useAccount();
++    const paid = useMapGetter('getPaid');
++    const { accountScopedUrl, currentAccount } = useAccount();
+ 
+     return {
++      paid,
+       isAdmin,
++      currentAccount,
+       accountScopedUrl,
+     };
+   },
+@@ -34,6 +40,10 @@
+       uiFlags: 'inboxes/getUIFlags',
+       loadingChatList: 'getChatListLoadingStatus',
+     }),
++    isUnpaidAccount() {
++      const account = this.currentAccount;
++      return account.paid === false;
++    },
+     loadingIndicatorMessage() {
+       if (this.uiFlags.isFetching) {
+         return this.$t('CONVERSATION.LOADING_INBOXES');
+@@ -75,7 +85,8 @@
+       v-if="!inboxesList.length && !uiFlags.isFetching && !loadingChatList"
+       class="clearfix mx-auto"
+     >
+-      <OnboardingView v-if="isAdmin" />
++      <OnboardingView v-if="isAdmin && !isUnpaidAccount" />
++      <UnpaidOnboardingView v-if="isAdmin && isUnpaidAccount" />
+       <EmptyStateMessage v-else :message="$t('CONVERSATION.NO_INBOX_AGENT')" />
+     </div>
+     <!-- Show empty state images if not loading -->
+@@ -84,13 +95,14 @@
+       v-else-if="!uiFlags.isFetching && !loadingChatList"
+       class="flex flex-col items-center justify-center h-full"
+     >
++      <UnpaidOnboardingView v-if="isAdmin && isUnpaidAccount" />
+       <!-- No conversations available -->
+       <EmptyStateMessage
+-        v-if="!allConversations.length"
++        v-if="!allConversations.length && !isUnpaidAccount"
+         :message="$t('CONVERSATION.NO_MESSAGE_1')"
+       />
+       <EmptyStateMessage
+-        v-else-if="allConversations.length && !currentChat.id"
++        v-else-if="allConversations.length && !currentChat.id && !isUnpaidAccount"
+         :message="conversationMissingMessage"
+       />
+     </div>
+Index: app/javascript/widget/components/AgentMessageBubble.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/widget/components/AgentMessageBubble.vue b/app/javascript/widget/components/AgentMessageBubble.vue
+--- a/app/javascript/widget/components/AgentMessageBubble.vue	(revision 183e062ba44f7f73013249149f487a0b2719be8a)
++++ b/app/javascript/widget/components/AgentMessageBubble.vue	(revision 7c9f62c6fdf867eaf6bb39fd0ce2a7a13ccf751f)
+@@ -7,6 +7,8 @@
+ import EmailInput from './template/EmailInput.vue';
+ import CustomerSatisfaction from 'shared/components/CustomerSatisfaction.vue';
+ import IntegrationCard from './template/IntegrationCard.vue';
++import UnpaidMessage from 'shared/components/UnpaidMessage.vue';
++import { mapGetters } from 'vuex';
+ 
+ export default {
+   name: 'AgentMessageBubble',
+@@ -16,6 +18,7 @@
+     ChatForm,
+     ChatOptions,
+     EmailInput,
++    UnpaidMessage,
+     CustomerSatisfaction,
+     IntegrationCard,
+   },
+@@ -40,9 +43,15 @@
+     };
+   },
+   computed: {
++    ...mapGetters({
++      currentUser: 'contacts/getCurrentUser',
++    }),
+     isTemplate() {
+       return this.messageType === 3;
+     },
++    isPaid() {
++      return this.currentUser.paid;
++    },
+     isTemplateEmail() {
+       return this.contentType === 'input_email';
+     },
+@@ -101,6 +110,10 @@
+         v-dompurify-html="formatMessage(message, false)"
+         class="message-content text-n-slate-12"
+       />
++      <div v-if="!isPaid" class="flex flex-col gap-1 text-sm">
++        <UnpaidMessage />
++      </div>
++
+       <EmailInput
+         v-if="isTemplateEmail"
+         :message-id="messageId"
+Index: app/views/api/v1/widget/contacts/show.json.jbuilder
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/views/api/v1/widget/contacts/show.json.jbuilder b/app/views/api/v1/widget/contacts/show.json.jbuilder
+--- a/app/views/api/v1/widget/contacts/show.json.jbuilder	(revision 183e062ba44f7f73013249149f487a0b2719be8a)
++++ b/app/views/api/v1/widget/contacts/show.json.jbuilder	(revision ad899ea55ef44b0dea6706443eaaf3c6c00b84d8)
+@@ -3,3 +3,6 @@
+ json.has_name @contact.name.present?
+ json.has_phone_number @contact.phone_number.present?
+ json.identifier @contact.identifier
++json.token @token
++json.paid @paid
++
+Index: app/controllers/concerns/website_token_helper.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/controllers/concerns/website_token_helper.rb b/app/controllers/concerns/website_token_helper.rb
+--- a/app/controllers/concerns/website_token_helper.rb	(revision 96f8c806e777f23dd7b356c7e9e97f35b628b73f)
++++ b/app/controllers/concerns/website_token_helper.rb	(revision baf667edfcbf0701cce716fbf88f553048a54388)
+@@ -15,6 +15,7 @@
+       source_id: auth_token_params[:source_id]
+     )
+     @contact = @contact_inbox&.contact
++    @paid = @web_widget.inbox.account.paid
+     raise ActiveRecord::RecordNotFound unless @contact
+ 
+     Current.contact = @contact
+Index: app/javascript/dashboard/components-next/message/bubbles/Text/Index.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/components-next/message/bubbles/Text/Index.vue b/app/javascript/dashboard/components-next/message/bubbles/Text/Index.vue
+--- a/app/javascript/dashboard/components-next/message/bubbles/Text/Index.vue	(revision 96f8c806e777f23dd7b356c7e9e97f35b628b73f)
++++ b/app/javascript/dashboard/components-next/message/bubbles/Text/Index.vue	(revision 62a6e580c6e75b668315b166cd121ce6df89d006)
+@@ -32,6 +32,10 @@
+   return messageType.value === MESSAGE_TYPES.TEMPLATE;
+ });
+ 
++const isOutgoing = computed(() => {
++  return messageType.value === MESSAGE_TYPES.OUTGOING;
++});
++
+ const isEmpty = computed(() => {
+   return !content.value && !attachments.value?.length;
+ });
+@@ -47,7 +51,11 @@
+       <span v-if="isEmpty" class="text-n-slate-11">
+         {{ $t('CONVERSATION.NO_CONTENT') }}
+       </span>
+-      <FormattedContent v-if="renderContent" :content="renderContent" />
++      <FormattedContent
++        v-if="renderContent"
++        :content="renderContent"
++        :is-outgoing="isOutgoing"
++      />
+       <TranslationToggle
+         v-if="hasTranslations"
+         class="-mt-3"
+Index: app/models/account.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/models/account.rb b/app/models/account.rb
+--- a/app/models/account.rb	(revision 62a6e580c6e75b668315b166cd121ce6df89d006)
++++ b/app/models/account.rb	(revision 1f48dfb613fb6df481ecabe469e4caf838115a7c)
+@@ -11,6 +11,7 @@
+ #  limits                :jsonb
+ #  locale                :integer          default("en")
+ #  name                  :string           not null
++#  paid                  :boolean          default(FALSE)
+ #  settings              :jsonb
+ #  status                :integer          default("active")
+ #  support_email         :string(100)
+@@ -29,6 +30,8 @@
+   include Featurable
+   include CacheKeys
+ 
++  has_and_belongs_to_many :orders, join_table: :accounts_orders
++
+   SETTINGS_PARAMS_SCHEMA = {
+     'type': 'object',
+     'properties':
+Index: app/views/api/v1/models/_account.json.jbuilder
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/views/api/v1/models/_account.json.jbuilder b/app/views/api/v1/models/_account.json.jbuilder
+--- a/app/views/api/v1/models/_account.json.jbuilder	(revision 62a6e580c6e75b668315b166cd121ce6df89d006)
++++ b/app/views/api/v1/models/_account.json.jbuilder	(revision ad899ea55ef44b0dea6706443eaaf3c6c00b84d8)
+@@ -23,5 +23,8 @@
+ json.locale @account.locale
+ json.name @account.name
+ json.support_email @account.support_email
++json.paid @account&.paid
++json.preview_websiteToken @website_token
++json.token  @cw_conversation
+ json.status @account.status
+ json.cache_keys @account.cache_keys
+Index: db/migrate/20251205122827_add_paid_to_accounts.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/db/migrate/20251205122827_add_paid_to_accounts.rb b/db/migrate/20251205122827_add_paid_to_accounts.rb
+new file mode 100644
+--- /dev/null	(revision baf667edfcbf0701cce716fbf88f553048a54388)
++++ b/db/migrate/20251205122827_add_paid_to_accounts.rb	(revision baf667edfcbf0701cce716fbf88f553048a54388)
+@@ -0,0 +1,5 @@
++class AddPaidToAccounts < ActiveRecord::Migration[7.1]
++  def change
++    add_column :accounts, :paid, :boolean, default: false
++  end
++end
+Index: app/models/order.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/models/order.rb b/app/models/order.rb
+new file mode 100644
+--- /dev/null	(revision 1f48dfb613fb6df481ecabe469e4caf838115a7c)
++++ b/app/models/order.rb	(revision 1f48dfb613fb6df481ecabe469e4caf838115a7c)
+@@ -0,0 +1,16 @@
++# == Schema Information
++#
++# Table name: orders
++#
++#  id           :bigint           not null, primary key
++#  address      :string
++#  amount       :decimal(, )
++#  order_type   :string
++#  payment_type :string
++#  status       :string
++#  created_at   :datetime         not null
++#  updated_at   :datetime         not null
++#
++class Order < ApplicationRecord
++  has_and_belongs_to_many :accounts, join_table: :accounts_orders
++end
+Index: db/migrate/20251205234107_create_orders.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/db/migrate/20251205234107_create_orders.rb b/db/migrate/20251205234107_create_orders.rb
+new file mode 100644
+--- /dev/null	(revision 1f48dfb613fb6df481ecabe469e4caf838115a7c)
++++ b/db/migrate/20251205234107_create_orders.rb	(revision 1f48dfb613fb6df481ecabe469e4caf838115a7c)
+@@ -0,0 +1,13 @@
++class CreateOrders < ActiveRecord::Migration[7.1]
++  def change
++    create_table :orders do |t|
++      t.string :payment_type
++      t.decimal :amount
++      t.string :status
++      t.string :address
++      t.string :order_type
++
++      t.timestamps
++    end
++  end
++end
+Index: db/migrate/20251205234353_create_join_table_accounts_orders.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/db/migrate/20251205234353_create_join_table_accounts_orders.rb b/db/migrate/20251205234353_create_join_table_accounts_orders.rb
+new file mode 100644
+--- /dev/null	(revision 1f48dfb613fb6df481ecabe469e4caf838115a7c)
++++ b/db/migrate/20251205234353_create_join_table_accounts_orders.rb	(revision 1f48dfb613fb6df481ecabe469e4caf838115a7c)
+@@ -0,0 +1,8 @@
++class CreateJoinTableAccountsOrders < ActiveRecord::Migration[7.1]
++  def change
++    create_join_table :accounts, :orders do |t|
++      # t.index [:account_id, :order_id]
++      # t.index [:order_id, :account_id]
++    end
++  end
++end
+Index: spec/factories/orders.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/spec/factories/orders.rb b/spec/factories/orders.rb
+new file mode 100644
+--- /dev/null	(revision 1f48dfb613fb6df481ecabe469e4caf838115a7c)
++++ b/spec/factories/orders.rb	(revision 1f48dfb613fb6df481ecabe469e4caf838115a7c)
+@@ -0,0 +1,9 @@
++FactoryBot.define do
++  factory :order do
++    payment_type { "MyString" }
++    amount { "9.99" }
++    status { "MyString" }
++    address { "MyString" }
++    order_type { "MyString" }
++  end
++end
+Index: spec/models/order_spec.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/spec/models/order_spec.rb b/spec/models/order_spec.rb
+new file mode 100644
+--- /dev/null	(revision 1f48dfb613fb6df481ecabe469e4caf838115a7c)
++++ b/spec/models/order_spec.rb	(revision 1f48dfb613fb6df481ecabe469e4caf838115a7c)
+@@ -0,0 +1,5 @@
++require 'rails_helper'
++
++RSpec.describe Order, type: :model do
++  pending "add some examples to (or delete) #{__FILE__}"
++end
+Index: app/controllers/api/v1/accounts/orders_controller.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/controllers/api/v1/accounts/orders_controller.rb b/app/controllers/api/v1/accounts/orders_controller.rb
+new file mode 100644
+--- /dev/null	(revision ad9c3e74c61348a1883487d795a2aa6fded00ee0)
++++ b/app/controllers/api/v1/accounts/orders_controller.rb	(revision ad9c3e74c61348a1883487d795a2aa6fded00ee0)
+@@ -0,0 +1,34 @@
++class Api::V1::Accounts::OrdersController < Api::V1::Accounts::BaseController
++  before_action :campaign, except: [:index, :create]
++  before_action :check_authorization
++
++  def index
++    @campaigns = Current.account.campaigns
++  end
++
++  def show; end
++
++  def create
++    @campaign = Current.account.campaigns.create!(campaign_params)
++  end
++
++  def update
++    @campaign.update!(campaign_params)
++  end
++
++  def destroy
++    @campaign.destroy!
++    head :ok
++  end
++
++  private
++
++  def campaign
++    @campaign ||= Current.account.campaigns.find_by(display_id: params[:id])
++  end
++
++  def campaign_params
++    params.require(:campaign).permit(:title, :description, :message, :enabled, :trigger_only_during_business_hours, :inbox_id, :sender_id,
++                                     :scheduled_at, audience: [:type, :id], trigger_rules: {}, template_params: {})
++  end
++end
+Index: app/javascript/dashboard/components/widgets/conversation/UsdOrder.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/components/widgets/conversation/UsdOrder.vue b/app/javascript/dashboard/components/widgets/conversation/UsdOrder.vue
+new file mode 100644
+--- /dev/null	(revision ad9c3e74c61348a1883487d795a2aa6fded00ee0)
++++ b/app/javascript/dashboard/components/widgets/conversation/UsdOrder.vue	(revision ad9c3e74c61348a1883487d795a2aa6fded00ee0)
+@@ -0,0 +1,55 @@
++<script setup>
++import { computed } from 'vue';
++import { useI18n } from 'vue-i18n';
++import { useStoreGetters } from 'dashboard/composables/store';
++
++const getters = useStoreGetters();
++const { t } = useI18n();
++const globalConfig = computed(() => getters['globalConfig/get'].value);
++const currentUser = computed(() => getters.getCurrentUser.value);
++
++const greetingMessage = computed(() => {
++  const hours = new Date().getHours();
++  let translationKey;
++  if (hours < 12) {
++    translationKey = 'ONBOARDING.GREETING_MORNING';
++  } else if (hours < 18) {
++    translationKey = 'ONBOARDING.GREETING_AFTERNOON';
++  } else {
++    translationKey = 'ONBOARDING.GREETING_EVENING';
++  }
++  return t(translationKey, {
++    name: currentUser.value.name,
++    installationName: globalConfig.value.installationName,
++  });
++});
++</script>
++
++<template>
++  <div
++    class="min-h-screen lg:max-w-5xl max-w-4xl mx-auto grid grid-cols-2 grid-rows-[auto_1fr_1fr] auto-rows-min gap-4 p-8 w-full font-inter overflow-auto"
++  >
++    <div class="col-span-full self-start">
++      <p
++        class="text-xl font-semibold text-n-slate-12 font-interDisplay tracking-[0.3px]"
++      >
++        {{ greetingMessage }}
++      </p>
++      <p class="text-n-slate-11 max-w-2xl text-base">
++        {{
++          $t('ONBOARDING.DESCRIPTION', {
++            installationName: globalConfig.installationName,
++          })
++        }}
++      </p>
++    </div>
++
++    <span> Hey，欢迎来到 Reply Bot ！</span>
++
++    <span> 对话链接，一秒激活</span>
++
++    <span>
++      感谢您的注册。请按照下面的步骤，立刻开始使用我们的平台为您的客户提供服务吧
++      <span/></span>
++  </div>
++</template>
+Index: app/javascript/dashboard/components-next/sidebar/Sidebar.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/components-next/sidebar/Sidebar.vue b/app/javascript/dashboard/components-next/sidebar/Sidebar.vue
+--- a/app/javascript/dashboard/components-next/sidebar/Sidebar.vue	(revision ad9c3e74c61348a1883487d795a2aa6fded00ee0)
++++ b/app/javascript/dashboard/components-next/sidebar/Sidebar.vue	(revision 177212d75de0459645987fc9ef43ac481a48160c)
+@@ -566,6 +566,12 @@
+           to: accountScopedRoute('sla_list'),
+         },
+         {
++          name: 'Settings Payment',
++          label: '付款',
++          icon: 'i-lucide-clock-alert',
++          to: accountScopedRoute('plan_list'),
++        },
++        {
+           name: 'Settings Security',
+           label: t('SIDEBAR.SECURITY'),
+           icon: 'i-lucide-shield',
+Index: app/javascript/dashboard/routes/dashboard/settings/payment/components/BuildInfo.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/routes/dashboard/settings/payment/components/BuildInfo.vue b/app/javascript/dashboard/routes/dashboard/settings/payment/components/BuildInfo.vue
+new file mode 100644
+--- /dev/null	(revision 2a327e1588dd8fca5b033ea48f45db892a5c47f8)
++++ b/app/javascript/dashboard/routes/dashboard/settings/payment/components/BuildInfo.vue	(revision 2a327e1588dd8fca5b033ea48f45db892a5c47f8)
+@@ -0,0 +1,56 @@
++<script setup>
++import { computed } from 'vue';
++import { useAccount } from 'dashboard/composables/useAccount';
++import { useMapGetter } from 'dashboard/composables/store';
++import { copyTextToClipboard } from 'shared/helpers/clipboard';
++import { useI18n } from 'vue-i18n';
++
++import semver from 'semver';
++
++const { t } = useI18n();
++const { currentAccount } = useAccount();
++
++const latestChatwootVersion = computed(() => {
++  return currentAccount.value.latest_chatwoot_version;
++});
++
++const globalConfig = useMapGetter('globalConfig/get');
++
++const hasAnUpdateAvailable = computed(() => {
++  if (!semver.valid(latestChatwootVersion.value)) {
++    return false;
++  }
++
++  return semver.lt(globalConfig.value.appVersion, latestChatwootVersion.value);
++});
++
++const gitSha = computed(() => {
++  return globalConfig.value.gitSha.substring(0, 7);
++});
++
++const copyGitSha = () => {
++  copyTextToClipboard(globalConfig.value.gitSha);
++};
++</script>
++
++<template>
++  <div class="p-4 text-sm text-center">
++    <div v-if="hasAnUpdateAvailable && globalConfig.displayManifest">
++      {{
++        t('GENERAL_SETTINGS.UPDATE_CHATWOOT', {
++          latestChatwootVersion: latestChatwootVersion,
++        })
++      }}
++    </div>
++    <div class="divide-x divide-n-slate-9">
++      <span class="px-2">{{ `v${globalConfig.appVersion}` }}</span>
++      <span
++        v-tooltip="t('COMPONENTS.CODE.BUTTON_TEXT')"
++        class="px-2 build-id cursor-pointer"
++        @click="copyGitSha"
++      >
++        {{ `Build ${gitSha}` }}
++      </span>
++    </div>
++  </div>
++</template>
+Index: app/javascript/dashboard/routes/dashboard/settings/payment/payment.routes.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/routes/dashboard/settings/payment/payment.routes.js b/app/javascript/dashboard/routes/dashboard/settings/payment/payment.routes.js
+new file mode 100644
+--- /dev/null	(revision 177212d75de0459645987fc9ef43ac481a48160c)
++++ b/app/javascript/dashboard/routes/dashboard/settings/payment/payment.routes.js	(revision 177212d75de0459645987fc9ef43ac481a48160c)
+@@ -0,0 +1,43 @@
++import { frontendURL } from '../../../../helper/URLHelper';
++import Pay from './pages/Pay.vue';
++import Plan from './pages/Plan.vue';
++import SettingsWrapper from '../SettingsWrapper.vue';
++
++export default {
++  routes: [
++    {
++      path: frontendURL('accounts/:accountId/settings/payment'),
++      meta: {
++        permissions: ['administrator'],
++      },
++      component: SettingsWrapper,
++      children: [
++        {
++          path: '',
++          name: 'payment_list',
++          component: Pay,
++          meta: {
++            permissions: ['administrator'],
++          },
++        },
++      ],
++    },
++    {
++      path: frontendURL('accounts/:accountId/plans/settings/payment'),
++      meta: {
++        permissions: ['administrator'],
++      },
++      component: SettingsWrapper,
++      children: [
++        {
++          path: '',
++          name: 'plan_list',
++          component: Plan,
++          meta: {
++            permissions: ['administrator'],
++          },
++        },
++      ],
++    },
++  ],
++};
+Index: app/javascript/dashboard/routes/dashboard/settings/settings.routes.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/routes/dashboard/settings/settings.routes.js b/app/javascript/dashboard/routes/dashboard/settings/settings.routes.js
+--- a/app/javascript/dashboard/routes/dashboard/settings/settings.routes.js	(revision ad9c3e74c61348a1883487d795a2aa6fded00ee0)
++++ b/app/javascript/dashboard/routes/dashboard/settings/settings.routes.js	(revision 2a327e1588dd8fca5b033ea48f45db892a5c47f8)
+@@ -24,6 +24,7 @@
+ import customRoles from './customRoles/customRole.routes';
+ import profile from './profile/profile.routes';
+ import security from './security/security.routes';
++import payment from './payment/payment.routes';
+ 
+ export default {
+   routes: [
+@@ -59,6 +60,7 @@
+     ...macros.routes,
+     ...reports.routes,
+     ...sla.routes,
++    ...payment.routes,
+     ...teams.routes,
+     ...customRoles.routes,
+     ...profile.routes,
+Index: package.json
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/package.json b/package.json
+--- a/package.json	(revision 2a327e1588dd8fca5b033ea48f45db892a5c47f8)
++++ b/package.json	(revision 811a508e2fa96aaf825c4e92d71dd1c715268a1e)
+@@ -11,6 +11,7 @@
+     "start:dev": "foreman start -f ./Procfile.dev",
+     "start:test": "RAILS_ENV=test foreman start -f ./Procfile.test",
+     "dev": "overmind start -f ./Procfile.dev",
++    "tron": "node tron.js",
+     "ruby:prettier": "bundle exec rubocop -a",
+     "build:sdk": "BUILD_MODE=library vite build",
+     "prepare": "husky install",
+@@ -57,6 +58,7 @@
+     "@vueuse/core": "^12.0.0",
+     "activestorage": "^5.2.6",
+     "axios": "^1.8.2",
++    "body-parser": "^2.2.1",
+     "camelcase-keys": "^9.1.3",
+     "chart.js": "~4.4.4",
+     "color2k": "^2.0.2",
+@@ -66,6 +68,7 @@
+     "date-fns": "2.21.1",
+     "date-fns-tz": "^1.3.3",
+     "dompurify": "3.2.4",
++    "express": "^5.2.1",
+     "flag-icons": "^7.2.3",
+     "floating-vue": "^5.2.2",
+     "highlight.js": "^11.10.0",
+@@ -78,6 +81,7 @@
+     "markdown-it-link-attributes": "^4.0.1",
+     "md5": "^2.3.0",
+     "mitt": "^3.0.1",
++    "node-cron": "^4.2.1",
+     "opus-recorder": "^8.0.5",
+     "pinia": "^3.0.4",
+     "posthog-js": "^1.260.2",
+@@ -86,6 +90,7 @@
+     "snakecase-keys": "^8.0.1",
+     "timezone-phone-codes": "^0.0.2",
+     "tinykeys": "^3.0.0",
++    "tronweb": "^6.1.0",
+     "turbolinks": "^5.2.0",
+     "urlpattern-polyfill": "^10.0.0",
+     "video.js": "7.18.1",
+Index: pnpm-lock.yaml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+--- a/pnpm-lock.yaml	(revision 2a327e1588dd8fca5b033ea48f45db892a5c47f8)
++++ b/pnpm-lock.yaml	(revision 811a508e2fa96aaf825c4e92d71dd1c715268a1e)
+@@ -69,7 +69,7 @@
+         version: 8.20.5(vue@3.5.12(typescript@5.6.2))
+       '@vitejs/plugin-vue':
+         specifier: ^5.1.4
+-        version: 5.1.4(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))(vue@3.5.12(typescript@5.6.2))
++        version: 5.1.4(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))(vue@3.5.12(typescript@5.6.2))
+       '@vue/compiler-sfc':
+         specifier: ^3.5.8
+         version: 3.5.8
+@@ -91,6 +91,9 @@
+       axios:
+         specifier: ^1.8.2
+         version: 1.8.2
++      body-parser:
++        specifier: ^2.2.1
++        version: 2.2.1
+       camelcase-keys:
+         specifier: ^9.1.3
+         version: 9.1.3
+@@ -118,6 +121,9 @@
+       dompurify:
+         specifier: 3.2.4
+         version: 3.2.4
++      express:
++        specifier: ^5.2.1
++        version: 5.2.1
+       flag-icons:
+         specifier: ^7.2.3
+         version: 7.2.3
+@@ -154,6 +160,9 @@
+       mitt:
+         specifier: ^3.0.1
+         version: 3.0.1
++      node-cron:
++        specifier: ^4.2.1
++        version: 4.2.1
+       opus-recorder:
+         specifier: ^8.0.5
+         version: 8.0.5
+@@ -178,6 +187,9 @@
+       tinykeys:
+         specifier: ^3.0.0
+         version: 3.0.0
++      tronweb:
++        specifier: ^6.1.0
++        version: 6.1.0
+       turbolinks:
+         specifier: ^5.2.0
+         version: 5.2.0
+@@ -244,7 +256,7 @@
+         version: 1.8.1(tailwindcss@3.4.13)
+       '@histoire/plugin-vue':
+         specifier: 0.17.15
+-        version: 0.17.15(histoire@0.17.15(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)))(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))(vue@3.5.12(typescript@5.6.2))
++        version: 0.17.15(histoire@0.17.15(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)))(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))(vue@3.5.12(typescript@5.6.2))
+       '@iconify-json/logos':
+         specifier: ^1.2.3
+         version: 1.2.3
+@@ -268,7 +280,7 @@
+         version: 8.2.6(size-limit@8.2.6)
+       '@vitest/coverage-v8':
+         specifier: 3.0.5
+-        version: 3.0.5(vitest@3.0.5(@types/node@22.7.0)(jsdom@24.1.3)(sass@1.79.3)(terser@5.33.0))
++        version: 3.0.5(vitest@3.0.5(@types/node@22.7.5)(jsdom@24.1.3)(sass@1.79.3)(terser@5.33.0))
+       '@vue/test-utils':
+         specifier: ^2.4.6
+         version: 2.4.6
+@@ -307,7 +319,7 @@
+         version: 6.0.0
+       histoire:
+         specifier: 0.17.15
+-        version: 0.17.15(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))
++        version: 0.17.15(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))
+       husky:
+         specifier: ^7.0.0
+         version: 7.0.4
+@@ -337,13 +349,13 @@
+         version: 3.4.13
+       vite:
+         specifier: 5.4.21
+-        version: 5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)
++        version: 5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)
+       vite-plugin-ruby:
+         specifier: ^5.0.0
+-        version: 5.0.0(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))
++        version: 5.0.0(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))
+       vitest:
+         specifier: 3.0.5
+-        version: 3.0.5(@types/node@22.7.0)(jsdom@24.1.3)(sass@1.79.3)(terser@5.33.0)
++        version: 3.0.5(@types/node@22.7.5)(jsdom@24.1.3)(sass@1.79.3)(terser@5.33.0)
+ 
+ packages:
+ 
+@@ -351,6 +363,9 @@
+     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
+     engines: {node: '>=0.10.0'}
+ 
++  '@adraffy/ens-normalize@1.10.1':
++    resolution: {integrity: sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw==}
++
+   '@akryum/tinypool@0.3.1':
+     resolution: {integrity: sha512-nznEC1ZA/m3hQDEnrGQ4c5gkaa9pcaVnw4LFJyzBAaR7E3nfiAPEHS3otnSafpZouVnoKeITl5D+2LsnwlnK8g==}
+     engines: {node: '>=14.0.0'}
+@@ -390,6 +405,10 @@
+   '@babel/runtime@7.25.6':
+     resolution: {integrity: sha512-VBj9MYyDb9tuLq7yzqjgzt6Q+IBQLrGZfdjOekyEirZPHxXWoTSGUTMrpsfi58Up73d13NfYLv8HT9vmznjzhQ==}
+     engines: {node: '>=6.9.0'}
++
++  '@babel/runtime@7.26.10':
++    resolution: {integrity: sha512-2WJMeRQPHKSPemqk/awGrAiuFfzBmOIPXKizAsVhWH9YJqLZ0H+HS4c8loHGgW6utJ3E/ejXQUsiGaQy2NZ9Fw==}
++    engines: {node: '>=6.9.0'}
+ 
+   '@babel/runtime@7.26.7':
+     resolution: {integrity: sha512-AOPI3D+a8dXnja+iwsUqGRjr1BbZIe771sXdapOtYI531gSqpi92vXivKcq2asu/DFpdl1ceFAKZyRzK2PCVcQ==}
+@@ -1012,6 +1031,20 @@
+     resolution: {integrity: sha512-36076AWZIRSr8qYOLjuDDkxej/HA0XAosrj7TS1ZeLlUBnLUtbDtvc1S7KSa0hqez7ouzOqGaWK24yoNnTa2OA==}
+     deprecated: MWC beta is longer supported. Please upgrade to @material/web
+ 
++  '@noble/curves@1.2.0':
++    resolution: {integrity: sha512-oYclrNgRaM9SsBUBVbb8M6DTV7ZHRTKugureoYEncY5c65HOmRzvSiTE3y5CYaPYJA/GVkrhXEoF0M3Ya9PMnw==}
++
++  '@noble/curves@1.4.2':
++    resolution: {integrity: sha512-TavHr8qycMChk8UwMld0ZDRvatedkzWfH8IiaeGCfymOP5i0hSCozz9vHOL0nkwk7HRMlFnAiKpS2jrUmSybcw==}
++
++  '@noble/hashes@1.3.2':
++    resolution: {integrity: sha512-MVC8EAQp7MvEcm30KWENFjgR+Mkmf+D189XJTkFIlwohU5hcBbn1ZkKq7KVTi2Hme3PMGF390DaL52beVrIihQ==}
++    engines: {node: '>= 16'}
++
++  '@noble/hashes@1.4.0':
++    resolution: {integrity: sha512-V1JJ1WTRUqHHrOSh597hURcMqVKVGL/ea3kv0gSnEdsEZ0/+VyPghM1lMNGc00z7CIQorSvbKpuJkxvuHbvdbg==}
++    engines: {node: '>= 16'}
++
+   '@nodelib/fs.scandir@2.1.5':
+     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
+     engines: {node: '>= 8'}
+@@ -1166,6 +1199,15 @@
+   '@scmmishra/pico-search@0.5.4':
+     resolution: {integrity: sha512-JdV8KumQ+pE5tqgQ71xUT9biE/qV//tx3NCqTLkW9Z4tsjKGN0B6kVowmtaZBAtErqir9XiMxsKXRTMF/MpUww==}
+ 
++  '@scure/base@1.1.9':
++    resolution: {integrity: sha512-8YKhl8GHiNI/pU2VMaofa2Tor7PJRAjwQLBBuilkJ9L5+13yVbC7JO/wS7piioAvPSwR3JKM1IJ/u4xQzbcXKg==}
++
++  '@scure/bip32@1.4.0':
++    resolution: {integrity: sha512-sVUpc0Vq3tXCkDGYVWGIZTRfnvu8LoTDaev7vbwh0omSvVORONr960MQWdKqJDCReIEmTj3PAr73O3aoxz7OPg==}
++
++  '@scure/bip39@1.3.0':
++    resolution: {integrity: sha512-disdg7gHuTDZtY+ZdkmLpPCk7fxZSu3gBiEGuoC1XYxv9cGx3Z6cpTggCgW6odSOOIXCiDjuGejW+aJKCY/pIQ==}
++
+   '@sentry-internal/browser-utils@8.31.0':
+     resolution: {integrity: sha512-Bq7TFMhPr1PixRGYkB/6ar9ws7sj224XzQ+hgpz6OxGEc9fQakvD8t/Nn7dp14k3FI/hcBRA6BBvpOKUUuPgGA==}
+     engines: {node: '>=14.18'}
+@@ -1261,6 +1303,9 @@
+   '@types/node@22.7.0':
+     resolution: {integrity: sha512-MOdOibwBs6KW1vfqz2uKMlxq5xAfAZ98SZjO8e3XnAbFnTJtAspqhWk7hrdSAs9/Y14ZWMiy7/MxMUzAOadYEw==}
+ 
++  '@types/node@22.7.5':
++    resolution: {integrity: sha512-jML7s2NAzMWc//QSJ1a3prpk78cOPchGvXJsC3C6R6PSMoooztvRVQEz89gmBTBY1SPMaqo5teB4uNHPdetShQ==}
++
+   '@types/trusted-types@2.0.7':
+     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
+ 
+@@ -1466,6 +1511,10 @@
+     resolution: {integrity: sha512-6/mh1E2u2YgEsCHdY0Yx5oW+61gZU+1vXaoiHHrpKeuRNNgFvS+/jrwHiQhB5apAf5oB7UB7E19ol2R2LKH8hQ==}
+     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+ 
++  accepts@2.0.0:
++    resolution: {integrity: sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng==}
++    engines: {node: '>= 0.6'}
++
+   acorn-globals@7.0.1:
+     resolution: {integrity: sha512-umOSDSDrfHbTNPuNpC2NSnnA3LUrqpevPb4T9jRx4MagXNS0rs+gwiTcAvqCRmsD6utzsrzNt+ebm00SNWiC3Q==}
+ 
+@@ -1504,6 +1553,9 @@
+   aes-decrypter@3.1.2:
+     resolution: {integrity: sha512-42nRwfQuPRj9R1zqZBdoxnaAmnIFyDi0MNyTVhjdFOd8fifXKKRfwIHIZ6AMn1or4x5WONzjwRTbTWcsIQ0O4A==}
+ 
++  aes-js@4.0.0-beta.5:
++    resolution: {integrity: sha512-G965FqalsNyrPqgEGON7nIx1e/OVENSgiEIzyC63haUMuvNnwIgIjMs52hlTCKhkBny7A2ORNlfY9Zu+jmGk1Q==}
++
+   agent-base@6.0.2:
+     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
+     engines: {node: '>= 6.0.0'}
+@@ -1622,12 +1674,18 @@
+     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
+     engines: {node: '>= 0.4'}
+ 
++  axios@1.12.2:
++    resolution: {integrity: sha512-vMJzPewAlRyOgxV2dU0Cuz2O8zzzx9VYtbJOaBgXFeLc4IV/Eg50n4LowmehOOR61S8ZMpc2K5Sa7g6A4jfkUw==}
++
+   axios@1.8.2:
+     resolution: {integrity: sha512-ls4GYBm5aig9vWx8AWDSGLpnpDQRtWAfrjU+EuytuODrFBkqesN2RkOQCBzrA1RQNHw1SmRMSDDDSwzNAYQ6Rg==}
+ 
+   balanced-match@1.0.2:
+     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
+ 
++  bignumber.js@9.1.2:
++    resolution: {integrity: sha512-2/mKyZH9K85bzOEfhXDBFZTGd1CTs+5IHpeFQo9luiBG7hghdC851Pj2WAhb6E3R6b9tZj/XKhbg4fum+Kepug==}
++
+   binary-extensions@2.2.0:
+     resolution: {integrity: sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==}
+     engines: {node: '>=8'}
+@@ -1638,6 +1696,10 @@
+   birpc@2.8.0:
+     resolution: {integrity: sha512-Bz2a4qD/5GRhiHSwj30c/8kC8QGj12nNDwz3D4ErQ4Xhy35dsSDvF+RA/tWpjyU0pdGtSDiEk6B5fBGE1qNVhw==}
+ 
++  body-parser@2.2.1:
++    resolution: {integrity: sha512-nfDwkulwiZYQIGwxdy0RUmowMhKcFVcYXUU7m4QlKYim1rUtg83xm2yjZ40QjDuc291AJjjeSc9b++AWHSgSHw==}
++    engines: {node: '>=18'}
++
+   boolbase@1.0.0:
+     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
+ 
+@@ -1671,6 +1733,10 @@
+   bytes-iec@3.1.1:
+     resolution: {integrity: sha512-fey6+4jDK7TFtFg/klGSvNKJctyU7n2aQdnM+CO0ruLPbqqMOM8Tio0Pc+deqUeVKX1tL5DQep1zQ7+37aTAsA==}
+     engines: {node: '>= 0.8'}
++
++  bytes@3.1.2:
++    resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
++    engines: {node: '>= 0.8'}
+ 
+   cac@6.7.14:
+     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
+@@ -1687,6 +1753,10 @@
+     resolution: {integrity: sha512-GHTSNSYICQ7scH7sZ+M2rFopRoLh8t2bLSW6BbgrtLsahOIB5iyAVJf9GjWK3cYTDaMj4XdBpM1cA6pIS0Kv2w==}
+     engines: {node: '>= 0.4'}
+ 
++  call-bound@1.0.4:
++    resolution: {integrity: sha512-+ys997U96po4Kx/ABpBCqhA9EuxJaQWDQg7295H4hBphv3IZg0boBKuwYpt4YXp6MZ5AmZQnU/tyMTlRpaSejg==}
++    engines: {node: '>= 0.4'}
++
+   callsites@3.1.0:
+     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
+     engines: {node: '>=6'}
+@@ -1842,6 +1912,22 @@
+   constant-case@3.0.4:
+     resolution: {integrity: sha512-I2hSBi7Vvs7BEuJDr5dDHfzb/Ruj3FyvFyh7KLilAjNQw3Be+xgqUBA2W6scVEcL0hL1dwPRtIqEPVUCKkSsyQ==}
+ 
++  content-disposition@1.0.1:
++    resolution: {integrity: sha512-oIXISMynqSqm241k6kcQ5UwttDILMK4BiurCfGEREw6+X9jkkpEe5T9FZaApyLGGOnFuyMWZpdolTXMtvEJ08Q==}
++    engines: {node: '>=18'}
++
++  content-type@1.0.5:
++    resolution: {integrity: sha512-nTjqfcBFEipKdXCv4YDQWCfmcLZKm81ldF0pAopTvyrFGVbcR6P/VAAd5G7N+0tTr8QqiU0tFadD6FK4NtJwOA==}
++    engines: {node: '>= 0.6'}
++
++  cookie-signature@1.2.2:
++    resolution: {integrity: sha512-D76uU73ulSXrD1UXF4KE2TMxVVwhsnCgfAyTg9k8P6KGZjlXKrOLe4dJQKI3Bxi5wjesZoFXJWElNWBjPZMbhg==}
++    engines: {node: '>=6.6.0'}
++
++  cookie@0.7.2:
++    resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
++    engines: {node: '>= 0.6'}
++
+   copy-anything@4.0.5:
+     resolution: {integrity: sha512-7Vv6asjS4gMOuILabD3l739tsaxFQmC+a7pLZm02zyvs8p977bL3zEgq3yDk5rn9B0PbYgIv++jmHcuUab4RhA==}
+     engines: {node: '>=18'}
+@@ -1984,6 +2070,15 @@
+     peerDependenciesMeta:
+       supports-color:
+         optional: true
++
++  debug@4.4.3:
++    resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
++    engines: {node: '>=6.0'}
++    peerDependencies:
++      supports-color: '*'
++    peerDependenciesMeta:
++      supports-color:
++        optional: true
+ 
+   decamelize@1.2.0:
+     resolution: {integrity: sha512-z2S+W9X73hAUUki+N+9Za2lBlun89zigOyGrsax+KUQ6wKW4ZoWpEYBkGhQjwAjjDCkWxhY0VKEhk8wzY7F5cA==}
+@@ -2018,6 +2113,10 @@
+     resolution: {integrity: sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==}
+     engines: {node: '>=0.4.0'}
+ 
++  depd@2.0.0:
++    resolution: {integrity: sha512-g7nH6P6dyDioJogAAGprGpCtVImJhpPk/roCzdb3fIh61/s/nPsfR6onyMwkCAR/OlC3yBC0lESvUoQEAssIrw==}
++    engines: {node: '>= 0.8'}
++
+   diacritics@1.3.0:
+     resolution: {integrity: sha512-wlwEkqcsaxvPJML+rDh/2iS824jbREk6DUMUKkEaSlxdYHeS43cClJtsWglvw2RfeXGm6ohKDqsXteJ5sP5enA==}
+ 
+@@ -2107,6 +2206,10 @@
+     resolution: {integrity: sha512-TPJXq8JqFaVYm2CWmPvnP2Iyo4ZSM7/QKcSmuMLDObfpH5fi7RUGmd/rTDf+rut/saiDiQEeVTNgAmJEdAOx0w==}
+     engines: {node: '>= 0.8'}
+ 
++  encodeurl@2.0.0:
++    resolution: {integrity: sha512-Q0n9HRi4m6JuGIV1eFlmvJB7ZEVxu93IrMyiMsGC0lrMJMWzRgx6WGquyfQgZVb31vhGgXnfmPNNXmxnOkRBrg==}
++    engines: {node: '>= 0.8'}
++
+   enquirer@2.4.1:
+     resolution: {integrity: sha512-rRqJg/6gd538VHvR3PSrdRBb/1Vy2YfzHqzvbhGIQpDRKIa4FgV/54b5Q1xYSxOOwKvjXweS26E0Q+nAMwp2pQ==}
+     engines: {node: '>=8.6'}
+@@ -2329,6 +2432,17 @@
+     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
+     engines: {node: '>=0.10.0'}
+ 
++  etag@1.8.1:
++    resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
++    engines: {node: '>= 0.6'}
++
++  ethereum-cryptography@2.2.1:
++    resolution: {integrity: sha512-r/W8lkHSiTLxUxW8Rf3u4HGB0xQweG2RyETjywylKZSzLWoWAijRz8WCuOtJ6wah+avllXBqZuk29HCCvhEIRg==}
++
++  ethers@6.13.5:
++    resolution: {integrity: sha512-+knKNieu5EKRThQJWwqaJ10a6HE9sSehGeqWN65//wE7j47ZpFhKAnHB/JJFibwwg61I/koxaPsXbXpD/skNOQ==}
++    engines: {node: '>=14.0.0'}
++
+   eventemitter3@5.0.1:
+     resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
+ 
+@@ -2340,6 +2454,10 @@
+     resolution: {integrity: sha512-bFi65yM+xZgk+u/KRIpekdSYkTB5W1pEf0Lt8Q8Msh7b+eQ7LXVtIB1Bkm4fvclDEL1b2CZkMhv2mOeF8tMdkA==}
+     engines: {node: '>=12.0.0'}
+ 
++  express@5.2.1:
++    resolution: {integrity: sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==}
++    engines: {node: '>= 18'}
++
+   extend-shallow@2.0.1:
+     resolution: {integrity: sha512-zCnTtlxNoAiDc3gqY2aYAWFx7XWWiasuF2K8Me5WbN8otHKTUKBwjPtNpRs/rbUZm7KxWAaNj7P1a/p52GbVug==}
+     engines: {node: '>=0.10.0'}
+@@ -2385,6 +2503,10 @@
+     resolution: {integrity: sha512-aAWcW57uxVNrQZqFXjITpW3sIUQmHGG3qSb9mUah9MgMC4NeWhNOlNjXEYq3HjRAvL6arUviZGGJsBg6z0zsWA==}
+     engines: {node: '>= 0.8'}
+ 
++  finalhandler@2.1.1:
++    resolution: {integrity: sha512-S8KoZgRZN+a5rNwqTxlZZePjT/4cnm0ROV70LedRHZ0p8u9fRID0hJUZQpkKLzro8LfmC8sx23bY6tVNxv8pQA==}
++    engines: {node: '>= 18.0.0'}
++
+   find-cache-dir@5.0.0:
+     resolution: {integrity: sha512-OuWNfjfP05JcpAP3JPgAKUhWefjMRfI5iAoSsvE24ANYWJaepAtlSgWECSVEuRgSXpyNEc9DJwG/TZpgcOqyig==}
+     engines: {node: '>=16'}
+@@ -2447,9 +2569,21 @@
+     resolution: {integrity: sha512-hGfm/slu0ZabnNt4oaRZ6uREyfCj6P4fT/n6A1rGV+Z0VdGXjfOhVUpkn6qVQONHGIFwmveGXyDs75+nr6FM8w==}
+     engines: {node: '>= 6'}
+ 
++  form-data@4.0.5:
++    resolution: {integrity: sha512-8RipRLol37bNs2bhoV67fiTEvdTrbMUYcFTiy3+wuuOnUog2QBHCZWXDRijWQfAkhBj2Uf5UnVaiWwA5vdd82w==}
++    engines: {node: '>= 6'}
++
++  forwarded@0.2.0:
++    resolution: {integrity: sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==}
++    engines: {node: '>= 0.6'}
++
+   fraction.js@4.3.7:
+     resolution: {integrity: sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==}
+ 
++  fresh@2.0.0:
++    resolution: {integrity: sha512-Rx/WycZ60HOaqLKAi6cHRKKI7zxWbJ31MhntmtwMoaTeF7XFH9hhBp8vITaMidfljRQ6eYWCKkaTK+ykVJHP2A==}
++    engines: {node: '>= 0.8'}
++
+   fs-extra@10.1.0:
+     resolution: {integrity: sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==}
+     engines: {node: '>=12'}
+@@ -2555,6 +2689,9 @@
+     resolution: {integrity: sha512-Y1zNGV+pzQdh7H39l9zgB4PJqjRNqydvdYCDG4HFXM4XuvSaQQlEc91IU1yALL8gUTDomgBAfz3XJdmUS+oo0w==}
+     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+ 
++  google-protobuf@3.21.4:
++    resolution: {integrity: sha512-MnG7N936zcKTco4Jd2PX2U96Kf9PxygAPKBug+74LHzmHXmceN16MmRcdgZv+DGef/S9YvQAfRsNCn4cjf9yyQ==}
++
+   gopd@1.0.1:
+     resolution: {integrity: sha512-d65bNlIadxvpb/A2abVdlqKqV563juRnZ1Wtk6s1sIR8uNsXR70xqIzVqxVf1eTqDunwT2MkczEeaezCKTZhwA==}
+ 
+@@ -2646,6 +2783,10 @@
+   htmlparser2@8.0.2:
+     resolution: {integrity: sha512-GYdjWKDkbRLkZ5geuHs5NY1puJ+PXwP7+fHPRz06Eirsb9ugf6d8kkXav6ADhcODhFFPMIXyxkxSuMf3D6NCFA==}
+ 
++  http-errors@2.0.1:
++    resolution: {integrity: sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ==}
++    engines: {node: '>= 0.8'}
++
+   http-proxy-agent@5.0.0:
+     resolution: {integrity: sha512-n2hY8YdoRE1i7r6M0w9DIw5GgZN0G25P8zLCRQ8rjXtTU3vsNFBI/vWK/UIeE6g5MUUz6avwAPXmL6Fy9D/90w==}
+     engines: {node: '>= 6'}
+@@ -2675,6 +2816,10 @@
+     resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
+     engines: {node: '>=0.10.0'}
+ 
++  iconv-lite@0.7.0:
++    resolution: {integrity: sha512-cf6L2Ds3h57VVmkZe+Pn+5APsT7FpqJtEhhieDCvrE2MK5Qk9MyffgQyuxQTm6BChfeZNtcOLHp9IcWRVcIcBQ==}
++    engines: {node: '>=0.10.0'}
++
+   idb@8.0.0:
+     resolution: {integrity: sha512-l//qvlAKGmQO31Qn7xdzagVPPaHTxXx199MhrAFuVBTPqydcPYBWjkrbv4Y0ktB+GmWOiwHl237UUOrLmQxLvw==}
+ 
+@@ -2722,6 +2867,10 @@
+     resolution: {integrity: sha512-NGnrKwXzSms2qUUih/ILZ5JBqNTSa1+ZmP6flaIp6KmSElgE9qdndzS3cqjrDovwFdmwsGsLdeFgB6suw+1e9g==}
+     engines: {node: '>= 0.4'}
+ 
++  ipaddr.js@1.9.1:
++    resolution: {integrity: sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==}
++    engines: {node: '>= 0.10'}
++
+   is-array-buffer@3.0.2:
+     resolution: {integrity: sha512-y+FyyR/w8vfIRq4eQcM1EYgSTnmHXPqaF+IgzgraytCFq5Xh8lllDVmAZolPJiZttZLeFSINPYMaEJ7/vWUa1w==}
+ 
+@@ -2820,6 +2969,9 @@
+   is-potential-custom-element-name@1.0.1:
+     resolution: {integrity: sha512-bCYeRA2rVibKZd+s2625gGnGF/t7DSqDs4dP7CrLA1m7jKWz6pps0LpYLJN8Q64HtmPKJ1hrN3nzPNKFEKOUiQ==}
+ 
++  is-promise@4.0.0:
++    resolution: {integrity: sha512-hvpoI6korhJMnej285dSg6nu1+e6uxs7zG3BYAm5byqDsgJNWwxzM6z6iZiAgQR4TJ30JmBTOwqZUw3WlyH3AQ==}
++
+   is-regex@1.1.4:
+     resolution: {integrity: sha512-kvRdxDsxZjhzUX07ZnLydzS1TU/TJlTUHHY4YLL87e37oUA49DfkLqgy+VjFocowy29cKvcSiu+kIv728jTTVg==}
+     engines: {node: '>= 0.4'}
+@@ -3152,6 +3304,14 @@
+   mdurl@2.0.0:
+     resolution: {integrity: sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w==}
+ 
++  media-typer@1.1.0:
++    resolution: {integrity: sha512-aisnrDP4GNe06UcKFnV5bfMNPBUw4jsLGaWwWfnH3v02GnBuXX2MCVn5RbrWo0j3pczUilYblq7fQ7Nw2t5XKw==}
++    engines: {node: '>= 0.8'}
++
++  merge-descriptors@2.0.0:
++    resolution: {integrity: sha512-Snk314V5ayFLhp3fkUREub6WtjBfPdCPY1Ln8/8munuLuiYhsABgBVWsozAG+MWMbVEvcdcpbi9R7ww22l9Q3g==}
++    engines: {node: '>=18'}
++
+   merge-stream@2.0.0:
+     resolution: {integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==}
+ 
+@@ -3171,10 +3331,18 @@
+     resolution: {integrity: sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg==}
+     engines: {node: '>= 0.6'}
+ 
++  mime-db@1.54.0:
++    resolution: {integrity: sha512-aU5EJuIN2WDemCcAp2vFBfp/m4EAhWJnUNSSw0ixs7/kXbd6Pg64EmwJkNdFhB8aWt1sH2CTXrLxo/iAGV3oPQ==}
++    engines: {node: '>= 0.6'}
++
+   mime-types@2.1.35:
+     resolution: {integrity: sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==}
+     engines: {node: '>= 0.6'}
+ 
++  mime-types@3.0.2:
++    resolution: {integrity: sha512-Lbgzdk0h4juoQ9fCKXW4by0UJqj+nOOrI9MJ1sSj4nI8aI2eo1qmvQEie4VD1glsS250n15LsWsYtCugiStS5A==}
++    engines: {node: '>=18'}
++
+   mimic-fn@2.1.0:
+     resolution: {integrity: sha512-OqbOk5oEQeAZ8WXWydlu9HJjz9WVdEIvamMCcXmuqUYjTknH/sqsWvhQ3vgwKFRR1HpjvNBKQ37nbJgYzGqGcg==}
+     engines: {node: '>=6'}
+@@ -3266,9 +3434,17 @@
+   natural-compare@1.4.0:
+     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
+ 
++  negotiator@1.0.0:
++    resolution: {integrity: sha512-8Ofs/AUQh8MaEcrlq5xOX0CQ9ypTF5dl78mjlMNfOK08fzpgTHQRQPBxcPlEtIw0yRpws+Zo/3r+5WRby7u3Gg==}
++    engines: {node: '>= 0.6'}
++
+   no-case@3.0.4:
+     resolution: {integrity: sha512-fgAN3jGAh+RoxUGZHTSOLJIqUc2wmoBwGR4tbpNAKmmovFoWq0OdRkb0VkldReO2a2iBT/OEulG9XSUc10r3zg==}
+ 
++  node-cron@4.2.1:
++    resolution: {integrity: sha512-lgimEHPE/QDgFlywTd8yTR61ptugX3Qer29efeyWw2rv259HtGBNn1vZVmp8lB9uo9wC0t/AT4iGqXxia+CJFg==}
++    engines: {node: '>=6.0.0'}
++
+   node-releases@2.0.14:
+     resolution: {integrity: sha512-y10wOWt8yZpqXmOgRo77WaHEmhYQYGNA6y421PKsKYWEK8aW+cqAphborZDhqfyKrbZEN92CN1X2KbafY2s7Yw==}
+ 
+@@ -3313,6 +3489,10 @@
+     resolution: {integrity: sha512-IRZSRuzJiynemAXPYtPe5BoI/RESNYR7TYm50MC5Mqbd3Jmw5y790sErYw3V6SryFJD64b74qQQs9wn5Bg/k3g==}
+     engines: {node: '>= 0.4'}
+ 
++  object-inspect@1.13.4:
++    resolution: {integrity: sha512-W67iLl4J2EXEGTbfeHCffrjDfitvLANg0UlX3wFUUSTx92KXRFegMHUVgSqE+wvhAbi4WqjGg9czysTV2Epbew==}
++    engines: {node: '>= 0.4'}
++
+   object-keys@1.1.1:
+     resolution: {integrity: sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==}
+     engines: {node: '>= 0.4'}
+@@ -3345,6 +3525,10 @@
+     resolution: {integrity: sha512-ikqdkGAAyf/X/gPhXGvfgAytDZtDbr+bkNUJ0N9h5MI/dmdgCs3l6hoHrcUv41sRKew3jIwrp4qQDXiK99Utww==}
+     engines: {node: '>= 0.8'}
+ 
++  on-finished@2.4.1:
++    resolution: {integrity: sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==}
++    engines: {node: '>= 0.8'}
++
+   once@1.4.0:
+     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
+ 
+@@ -3455,6 +3639,9 @@
+     resolution: {integrity: sha512-Xa4Nw17FS9ApQFJ9umLiJS4orGjm7ZzwUrwamcGQuHSzDyth9boKDaycYdDcZDuqYATXw4HFXgaqWTctW/v1HA==}
+     engines: {node: '>=16 || 14 >=14.18'}
+ 
++  path-to-regexp@8.3.0:
++    resolution: {integrity: sha512-7jdwVIRtsP8MYpdXSwOS0YdD0Du+qOoF/AEPIt88PcCFrZCzx41oxku1jD88hZBwbNUIEfpqvuhjFaMAqMTWnA==}
++
+   path-type@4.0.0:
+     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
+     engines: {node: '>=8'}
+@@ -3819,6 +4006,10 @@
+   proto-list@1.2.4:
+     resolution: {integrity: sha512-vtK/94akxsTMhe0/cbfpR+syPuszcuwhqVjJq26CuNDgFGj682oRBXOP5MJpv2r7JtE8MsiepGIqvvOTBwn2vA==}
+ 
++  proxy-addr@2.0.7:
++    resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
++    engines: {node: '>= 0.10'}
++
+   proxy-from-env@1.1.0:
+     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
+ 
+@@ -3838,6 +4029,10 @@
+     engines: {node: '>=10.13.0'}
+     hasBin: true
+ 
++  qs@6.14.0:
++    resolution: {integrity: sha512-YWWTjgABSKcvs/nWBi9PycY/JiPJqOD4JA6o9Sej2AtvSGarXxKC3OQSk4pAarbdQlKAh5D4FCQkJNkW+GAn3w==}
++    engines: {node: '>=0.6'}
++
+   querystringify@2.2.0:
+     resolution: {integrity: sha512-FIqgj2EUvTa7R50u0rGsyTftzjYmv/a3hO345bZNrqabNqjtgiDMgmo4mkUjd+nzU5oF3dClKqFIPUKybUyqoQ==}
+ 
+@@ -3848,6 +4043,14 @@
+     resolution: {integrity: sha512-AAFUA5O1d83pIHEhJwWCq/RQcRukCkn/NSm2QsTEMle5f2hP0ChI2+3Xb051PZCkLryI/Ir1MVKviT2FIloaTQ==}
+     engines: {node: '>=12'}
+ 
++  range-parser@1.2.1:
++    resolution: {integrity: sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==}
++    engines: {node: '>= 0.6'}
++
++  raw-body@3.0.2:
++    resolution: {integrity: sha512-K5zQjDllxWkf7Z5xJdV0/B0WTNqx6vxG70zJE4N0kBs4LovmEYWJzQGxC9bS9RAKu3bgM40lrd5zoLJ12MQ5BA==}
++    engines: {node: '>= 0.10'}
++
+   read-cache@1.0.0:
+     resolution: {integrity: sha512-Owdv/Ft7IjOgm/i0xvNDZ1LrRANRfew4b2prF3OWMQLxLfu3bS8FVhCsrSCMK4lR56Y9ya+AThoTpDCTxCmpRA==}
+ 
+@@ -3926,6 +4129,10 @@
+   rope-sequence@1.3.2:
+     resolution: {integrity: sha512-ku6MFrwEVSVmXLvy3dYph3LAMNS0890K7fabn+0YIRQ2T96T9F4gkFf0vf0WW0JUraNWwGRtInEpH7yO4tbQZg==}
+ 
++  router@2.2.0:
++    resolution: {integrity: sha512-nLTrUKm2UyiL7rlhapu/Zl45FwNgkZGaCpZbIHajDYgwlJCOzLSk+cIPAnsEqV955GjILJnKbdQC1nVPz+gAYQ==}
++    engines: {node: '>= 18'}
++
+   rrweb-cssom@0.6.0:
+     resolution: {integrity: sha512-APM0Gt1KoXBz0iIkkdB/kfvGOwC4UuJFeG/c+yV7wSc7q96cG/kJ0HiYCnzivD9SB53cLV1MlHFNfOuPaadYSw==}
+ 
+@@ -3993,9 +4200,22 @@
+     engines: {node: '>=10'}
+     hasBin: true
+ 
++  semver@7.7.1:
++    resolution: {integrity: sha512-hlq8tAfn0m/61p4BVRcPzIGr6LKiMwo4VM6dGi6pt4qcRkmNzTcWq6eCEjEh+qXjkMDvPlOFFSGwQjoEa6gyMA==}
++    engines: {node: '>=10'}
++    hasBin: true
++
++  send@1.2.0:
++    resolution: {integrity: sha512-uaW0WwXKpL9blXE2o0bRhoL2EGXIrZxQ2ZQ4mgcfoBxdFmQold+qWsD2jLrfZ0trjKL6vOw0j//eAwcALFjKSw==}
++    engines: {node: '>= 18'}
++
+   sentence-case@3.0.4:
+     resolution: {integrity: sha512-8LS0JInaQMCRoQ7YUytAo/xUu5W2XnQxV2HI/6uM6U7CITS1RqPElr30V6uIqyMKM9lJGRVFy5/4CuzcixNYSg==}
+ 
++  serve-static@2.2.0:
++    resolution: {integrity: sha512-61g9pCh0Vnh7IutZjtLGGpTA355+OPn2TyDv/6ivP2h/AdAVX9azsoxmg2/M6nZeQZNYBEwIcsne1mJd9oQItQ==}
++    engines: {node: '>= 18'}
++
+   set-blocking@2.0.0:
+     resolution: {integrity: sha512-KiKBS8AnWGEyLzofFfmvKwpdPzqiy16LvQfK3yv/fVH7Bj13/wl3JSR1J+rfgRE9q7xUJK4qvgS8raSOeLUehw==}
+ 
+@@ -4007,6 +4227,9 @@
+     resolution: {integrity: sha512-7PGFlmtwsEADb0WYyvCMa1t+yke6daIG4Wirafur5kcf+MhUnPms1UeR0CKQdTZD81yESwMHbtn+TR+dMviakQ==}
+     engines: {node: '>= 0.4'}
+ 
++  setprototypeof@1.2.0:
++    resolution: {integrity: sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==}
++
+   shebang-command@2.0.0:
+     resolution: {integrity: sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA==}
+     engines: {node: '>=8'}
+@@ -4022,9 +4245,25 @@
+     resolution: {integrity: sha512-RbRMD+IuJJseSZljDdne9ThrUYrwBwJR04FvN4VXpfsU3MNID5VJGHLAD5je/HGThCyEKNgH+nEkSFEWKD7C3Q==}
+     deprecated: Please migrate to https://github.com/antfu/shikiji
+ 
++  side-channel-list@1.0.0:
++    resolution: {integrity: sha512-FCLHtRD/gnpCiCHEiJLOwdmFP+wzCmDEkc9y7NsYxeF4u7Btsn1ZuwgwJGxImImHicJArLP4R0yX4c2KCrMrTA==}
++    engines: {node: '>= 0.4'}
++
++  side-channel-map@1.0.1:
++    resolution: {integrity: sha512-VCjCNfgMsby3tTdo02nbjtM/ewra6jPHmpThenkTYh8pG9ucZ/1P8So4u4FGBek/BjpOVsDCMoLA/iuBKIFXRA==}
++    engines: {node: '>= 0.4'}
++
++  side-channel-weakmap@1.0.2:
++    resolution: {integrity: sha512-WPS/HvHQTYnHisLo9McqBHOJk2FkHO/tlpvldyrnem4aeQp4hai3gythswg6p01oSoTl58rcpiFAjF2br2Ak2A==}
++    engines: {node: '>= 0.4'}
++
+   side-channel@1.0.6:
+     resolution: {integrity: sha512-fDW/EZ6Q9RiO8eFG8Hj+7u/oW+XrPTIChwCOM2+th2A6OblDtYYIpve9m+KvI9Z4C9qSEXlaGR6bTEYHReuglA==}
+     engines: {node: '>= 0.4'}
++
++  side-channel@1.1.0:
++    resolution: {integrity: sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==}
++    engines: {node: '>= 0.4'}
+ 
+   siginfo@2.0.0:
+     resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}
+@@ -4099,6 +4338,10 @@
+     resolution: {integrity: sha512-OpZ3zP+jT1PI7I8nemJX4AKmAX070ZkYPVWV/AaKTJl+tXCTGyVdC1a4SL8RUQYEwk/f34ZX8UTykN68FwrqAA==}
+     engines: {node: '>= 0.6'}
+ 
++  statuses@2.0.2:
++    resolution: {integrity: sha512-DvEy55V3DB7uknRo+4iOGT5fP1slR8wQohVdknigZPMpMstaKJQWhwiYBACJE3Ul2pTnATihhBYnRhZQHGBiRw==}
++    engines: {node: '>= 0.8'}
++
+   std-env@3.8.0:
+     resolution: {integrity: sha512-Bc3YwwCB+OzldMxOXJIIvC6cPRWr/LxOp48CdQTOkPyk/t4JWWJbrilwBd7RJzKV8QW7tJkcgAmeuLLJugl5/w==}
+ 
+@@ -4258,6 +4501,10 @@
+     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
+     engines: {node: '>=8.0'}
+ 
++  toidentifier@1.0.1:
++    resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
++    engines: {node: '>=0.6'}
++
+   totalist@3.0.1:
+     resolution: {integrity: sha512-sf4i37nQ2LBx4m3wB74y+ubopq6W/dIzXg0FDGjsYnZHVa1Da8FH853wlL2gtUhg+xJXjfk3kUZS3BRoQeoQBQ==}
+     engines: {node: '>=6'}
+@@ -4274,6 +4521,9 @@
+     resolution: {integrity: sha512-tk2G5R2KRwBd+ZN0zaEXpmzdKyOYksXwywulIX95MBODjSzMIuQnQ3m8JxgbhnL1LeVo7lqQKsYa1O3Htl7K5g==}
+     engines: {node: '>=18'}
+ 
++  tronweb@6.1.0:
++    resolution: {integrity: sha512-ANEr2YneA2frXTpsxDR21yk2cJLIvOdPe7dg7gu96TyqfVbS9eCrguNuN+qCUZOC/zW3n6R880bBDbEWKZiWzA==}
++
+   ts-interface-checker@0.1.13:
+     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
+ 
+@@ -4305,6 +4555,10 @@
+     resolution: {integrity: sha512-yOGpmOAL7CkKe/91I5O3gPICmJNLJ1G4zFYVAsRHg7M64biSnPtRj0WNQt++bRkjYOqjWXrhnUw1utzmVErAdg==}
+     engines: {node: '>=16'}
+ 
++  type-is@2.0.1:
++    resolution: {integrity: sha512-OZs6gsjF4vMp32qrCbiVSkrFmXtG/AZhY3t0iAMrMBiAZyV9oALtXO8hsrHbMXF9x6L3grlFuwW2oAz7cav+Gw==}
++    engines: {node: '>= 0.6'}
++
+   typed-array-buffer@1.0.0:
+     resolution: {integrity: sha512-Y8KTSIglk9OZEr8zywiIHG/kmQ7KWyjseXs1CbSo8vC42w7hg2HgYTxSWwP0+is7bWDc1H+Fo026CpHFwm8tkw==}
+     engines: {node: '>= 0.4'}
+@@ -4405,6 +4659,14 @@
+     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
+     engines: {node: '>= 0.4.0'}
+ 
++  validator@13.15.20:
++    resolution: {integrity: sha512-KxPOq3V2LmfQPP4eqf3Mq/zrT0Dqp2Vmx2Bn285LwVahLc+CsxOM0crBHczm8ijlcjZ0Q5Xd6LW3z3odTPnlrw==}
++    engines: {node: '>= 0.10'}
++
++  vary@1.1.2:
++    resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
++    engines: {node: '>= 0.8'}
++
+   video.js@7.18.1:
+     resolution: {integrity: sha512-mnXdmkVcD5qQdKMZafDjqdhrnKGettZaGSVkExjACiylSB4r2Yt5W1bchsKmjFpfuNfszsMjTUnnoIWSSqoe/Q==}
+ 
+@@ -4692,6 +4954,18 @@
+   wrappy@1.0.2:
+     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+ 
++  ws@8.17.1:
++    resolution: {integrity: sha512-6XQFvXTkbfUOZOKKILFG1PDK2NDQs4azKQl26T0YS5CxqWLgXajbPZ+h4gZekJyRqFU8pvnbAbbs/3TgRPy+GQ==}
++    engines: {node: '>=10.0.0'}
++    peerDependencies:
++      bufferutil: ^4.0.1
++      utf-8-validate: '>=5.0.2'
++    peerDependenciesMeta:
++      bufferutil:
++        optional: true
++      utf-8-validate:
++        optional: true
++
+   ws@8.18.0:
+     resolution: {integrity: sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==}
+     engines: {node: '>=10.0.0'}
+@@ -4766,6 +5040,8 @@
+ 
+   '@aashutoshrathi/word-wrap@1.2.6': {}
+ 
++  '@adraffy/ens-normalize@1.10.1': {}
++
+   '@akryum/tinypool@0.3.1': {}
+ 
+   '@alloc/quick-lru@5.2.0': {}
+@@ -4797,6 +5073,10 @@
+   '@babel/runtime@7.25.6':
+     dependencies:
+       regenerator-runtime: 0.14.1
++
++  '@babel/runtime@7.26.10':
++    dependencies:
++      regenerator-runtime: 0.14.1
+ 
+   '@babel/runtime@7.26.7':
+     dependencies:
+@@ -5252,10 +5532,10 @@
+       highlight.js: 11.10.0
+       vue: 3.5.12(typescript@5.6.2)
+ 
+-  '@histoire/app@0.17.17(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))':
++  '@histoire/app@0.17.17(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))':
+     dependencies:
+-      '@histoire/controls': 0.17.17(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))
+-      '@histoire/shared': 0.17.17(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))
++      '@histoire/controls': 0.17.17(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))
++      '@histoire/shared': 0.17.17(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))
+       '@histoire/vendors': 0.17.17
+       '@types/flexsearch': 0.7.6
+       flexsearch: 0.7.21
+@@ -5263,7 +5543,7 @@
+     transitivePeerDependencies:
+       - vite
+ 
+-  '@histoire/controls@0.17.17(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))':
++  '@histoire/controls@0.17.17(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))':
+     dependencies:
+       '@codemirror/commands': 6.7.0
+       '@codemirror/lang-json': 6.0.1
+@@ -5272,26 +5552,26 @@
+       '@codemirror/state': 6.4.1
+       '@codemirror/theme-one-dark': 6.1.2
+       '@codemirror/view': 6.34.1
+-      '@histoire/shared': 0.17.17(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))
++      '@histoire/shared': 0.17.17(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))
+       '@histoire/vendors': 0.17.17
+     transitivePeerDependencies:
+       - vite
+ 
+-  '@histoire/plugin-vue@0.17.15(histoire@0.17.15(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)))(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))(vue@3.5.12(typescript@5.6.2))':
++  '@histoire/plugin-vue@0.17.15(histoire@0.17.15(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)))(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))(vue@3.5.12(typescript@5.6.2))':
+     dependencies:
+-      '@histoire/controls': 0.17.17(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))
+-      '@histoire/shared': 0.17.17(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))
++      '@histoire/controls': 0.17.17(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))
++      '@histoire/shared': 0.17.17(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))
+       '@histoire/vendors': 0.17.17
+       change-case: 4.1.2
+       globby: 13.2.2
+-      histoire: 0.17.15(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))
++      histoire: 0.17.15(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))
+       launch-editor: 2.9.1
+       pathe: 1.1.2
+       vue: 3.5.12(typescript@5.6.2)
+     transitivePeerDependencies:
+       - vite
+ 
+-  '@histoire/shared@0.17.17(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))':
++  '@histoire/shared@0.17.17(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))':
+     dependencies:
+       '@histoire/vendors': 0.17.17
+       '@types/fs-extra': 9.0.13
+@@ -5299,7 +5579,7 @@
+       chokidar: 3.6.0
+       pathe: 1.1.2
+       picocolors: 1.1.0
+-      vite: 5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)
++      vite: 5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)
+ 
+   '@histoire/vendors@0.17.17': {}
+ 
+@@ -5491,6 +5771,18 @@
+       lit: 2.2.6
+       tslib: 2.8.1
+ 
++  '@noble/curves@1.2.0':
++    dependencies:
++      '@noble/hashes': 1.3.2
++
++  '@noble/curves@1.4.2':
++    dependencies:
++      '@noble/hashes': 1.4.0
++
++  '@noble/hashes@1.3.2': {}
++
++  '@noble/hashes@1.4.0': {}
++
+   '@nodelib/fs.scandir@2.1.5':
+     dependencies:
+       '@nodelib/fs.stat': 2.0.5
+@@ -5590,6 +5882,19 @@
+ 
+   '@scmmishra/pico-search@0.5.4': {}
+ 
++  '@scure/base@1.1.9': {}
++
++  '@scure/bip32@1.4.0':
++    dependencies:
++      '@noble/curves': 1.4.2
++      '@noble/hashes': 1.4.0
++      '@scure/base': 1.1.9
++
++  '@scure/bip39@1.3.0':
++    dependencies:
++      '@noble/hashes': 1.4.0
++      '@scure/base': 1.1.9
++
+   '@sentry-internal/browser-utils@8.31.0':
+     dependencies:
+       '@sentry/core': 8.31.0
+@@ -5699,6 +6004,10 @@
+     dependencies:
+       undici-types: 6.19.8
+ 
++  '@types/node@22.7.5':
++    dependencies:
++      undici-types: 6.19.8
++
+   '@types/trusted-types@2.0.7': {}
+ 
+   '@types/web-bluetooth@0.0.20': {}
+@@ -5734,12 +6043,12 @@
+       global: 4.4.0
+       is-function: 1.0.2
+ 
+-  '@vitejs/plugin-vue@5.1.4(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))(vue@3.5.12(typescript@5.6.2))':
++  '@vitejs/plugin-vue@5.1.4(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))(vue@3.5.12(typescript@5.6.2))':
+     dependencies:
+-      vite: 5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)
++      vite: 5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)
+       vue: 3.5.12(typescript@5.6.2)
+ 
+-  '@vitest/coverage-v8@3.0.5(vitest@3.0.5(@types/node@22.7.0)(jsdom@24.1.3)(sass@1.79.3)(terser@5.33.0))':
++  '@vitest/coverage-v8@3.0.5(vitest@3.0.5(@types/node@22.7.5)(jsdom@24.1.3)(sass@1.79.3)(terser@5.33.0))':
+     dependencies:
+       '@ampproject/remapping': 2.3.0
+       '@bcoe/v8-coverage': 1.0.2
+@@ -5753,7 +6062,7 @@
+       std-env: 3.8.0
+       test-exclude: 7.0.1
+       tinyrainbow: 2.0.0
+-      vitest: 3.0.5(@types/node@22.7.0)(jsdom@24.1.3)(sass@1.79.3)(terser@5.33.0)
++      vitest: 3.0.5(@types/node@22.7.5)(jsdom@24.1.3)(sass@1.79.3)(terser@5.33.0)
+     transitivePeerDependencies:
+       - supports-color
+ 
+@@ -5764,13 +6073,13 @@
+       chai: 5.1.2
+       tinyrainbow: 2.0.0
+ 
+-  '@vitest/mocker@3.0.5(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))':
++  '@vitest/mocker@3.0.5(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))':
+     dependencies:
+       '@vitest/spy': 3.0.5
+       estree-walker: 3.0.3
+       magic-string: 0.30.17
+     optionalDependencies:
+-      vite: 5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)
++      vite: 5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)
+ 
+   '@vitest/pretty-format@3.0.5':
+     dependencies:
+@@ -6005,6 +6314,11 @@
+ 
+   abbrev@2.0.0: {}
+ 
++  accepts@2.0.0:
++    dependencies:
++      mime-types: 3.0.2
++      negotiator: 1.0.0
++
+   acorn-globals@7.0.1:
+     dependencies:
+       acorn: 8.12.1
+@@ -6042,6 +6356,8 @@
+       global: 4.4.0
+       pkcs7: 1.0.4
+ 
++  aes-js@4.0.0-beta.5: {}
++
+   agent-base@6.0.2:
+     dependencies:
+       debug: 4.4.0
+@@ -6190,6 +6506,14 @@
+     dependencies:
+       possible-typed-array-names: 1.0.0
+ 
++  axios@1.12.2:
++    dependencies:
++      follow-redirects: 1.15.9
++      form-data: 4.0.5
++      proxy-from-env: 1.1.0
++    transitivePeerDependencies:
++      - debug
++
+   axios@1.8.2:
+     dependencies:
+       follow-redirects: 1.15.9
+@@ -6200,12 +6524,28 @@
+ 
+   balanced-match@1.0.2: {}
+ 
++  bignumber.js@9.1.2: {}
++
+   binary-extensions@2.2.0: {}
+ 
+   birpc@0.1.1: {}
+ 
+   birpc@2.8.0: {}
+ 
++  body-parser@2.2.1:
++    dependencies:
++      bytes: 3.1.2
++      content-type: 1.0.5
++      debug: 4.4.3
++      http-errors: 2.0.1
++      iconv-lite: 0.7.0
++      on-finished: 2.4.1
++      qs: 6.14.0
++      raw-body: 3.0.2
++      type-is: 2.0.1
++    transitivePeerDependencies:
++      - supports-color
++
+   boolbase@1.0.0: {}
+ 
+   boxen@8.0.1:
+@@ -6251,6 +6591,8 @@
+ 
+   bytes-iec@3.1.1: {}
+ 
++  bytes@3.1.2: {}
++
+   cac@6.7.14: {}
+ 
+   call-bind-apply-helpers@1.0.2:
+@@ -6271,6 +6613,11 @@
+       get-intrinsic: 1.2.4
+       set-function-length: 1.2.2
+ 
++  call-bound@1.0.4:
++    dependencies:
++      call-bind-apply-helpers: 1.0.2
++      get-intrinsic: 1.3.0
++
+   callsites@3.1.0: {}
+ 
+   camel-case@4.1.2:
+@@ -6452,6 +6799,14 @@
+       tslib: 2.8.1
+       upper-case: 2.0.2
+ 
++  content-disposition@1.0.1: {}
++
++  content-type@1.0.5: {}
++
++  cookie-signature@1.2.2: {}
++
++  cookie@0.7.2: {}
++
+   copy-anything@4.0.5:
+     dependencies:
+       is-what: 5.5.0
+@@ -6564,6 +6919,10 @@
+   debug@4.4.0:
+     dependencies:
+       ms: 2.1.3
++
++  debug@4.4.3:
++    dependencies:
++      ms: 2.1.3
+ 
+   decamelize@1.2.0: {}
+ 
+@@ -6594,6 +6953,8 @@
+ 
+   delayed-stream@1.0.0: {}
+ 
++  depd@2.0.0: {}
++
+   diacritics@1.3.0: {}
+ 
+   didyoumean@1.2.2: {}
+@@ -6678,6 +7039,8 @@
+ 
+   encodeurl@1.0.2: {}
+ 
++  encodeurl@2.0.0: {}
++
+   enquirer@2.4.1:
+     dependencies:
+       ansi-colors: 4.1.3
+@@ -7046,6 +7409,28 @@
+ 
+   esutils@2.0.3: {}
+ 
++  etag@1.8.1: {}
++
++  ethereum-cryptography@2.2.1:
++    dependencies:
++      '@noble/curves': 1.4.2
++      '@noble/hashes': 1.4.0
++      '@scure/bip32': 1.4.0
++      '@scure/bip39': 1.3.0
++
++  ethers@6.13.5:
++    dependencies:
++      '@adraffy/ens-normalize': 1.10.1
++      '@noble/curves': 1.2.0
++      '@noble/hashes': 1.3.2
++      '@types/node': 22.7.5
++      aes-js: 4.0.0-beta.5
++      tslib: 2.7.0
++      ws: 8.17.1
++    transitivePeerDependencies:
++      - bufferutil
++      - utf-8-validate
++
+   eventemitter3@5.0.1: {}
+ 
+   execa@7.2.0:
+@@ -7062,6 +7447,39 @@
+ 
+   expect-type@1.1.0: {}
+ 
++  express@5.2.1:
++    dependencies:
++      accepts: 2.0.0
++      body-parser: 2.2.1
++      content-disposition: 1.0.1
++      content-type: 1.0.5
++      cookie: 0.7.2
++      cookie-signature: 1.2.2
++      debug: 4.4.0
++      depd: 2.0.0
++      encodeurl: 2.0.0
++      escape-html: 1.0.3
++      etag: 1.8.1
++      finalhandler: 2.1.1
++      fresh: 2.0.0
++      http-errors: 2.0.1
++      merge-descriptors: 2.0.0
++      mime-types: 3.0.2
++      on-finished: 2.4.1
++      once: 1.4.0
++      parseurl: 1.3.3
++      proxy-addr: 2.0.7
++      qs: 6.14.0
++      range-parser: 1.2.1
++      router: 2.2.0
++      send: 1.2.0
++      serve-static: 2.2.0
++      statuses: 2.0.2
++      type-is: 2.0.1
++      vary: 1.1.2
++    transitivePeerDependencies:
++      - supports-color
++
+   extend-shallow@2.0.1:
+     dependencies:
+       is-extendable: 0.1.1
+@@ -7112,6 +7530,17 @@
+     transitivePeerDependencies:
+       - supports-color
+ 
++  finalhandler@2.1.1:
++    dependencies:
++      debug: 4.4.0
++      encodeurl: 2.0.0
++      escape-html: 1.0.3
++      on-finished: 2.4.1
++      parseurl: 1.3.3
++      statuses: 2.0.2
++    transitivePeerDependencies:
++      - supports-color
++
+   find-cache-dir@5.0.0:
+     dependencies:
+       common-path-prefix: 3.0.0
+@@ -7174,8 +7603,20 @@
+       es-set-tostringtag: 2.1.0
+       mime-types: 2.1.35
+ 
++  form-data@4.0.5:
++    dependencies:
++      asynckit: 0.4.0
++      combined-stream: 1.0.8
++      es-set-tostringtag: 2.1.0
++      hasown: 2.0.2
++      mime-types: 2.1.35
++
++  forwarded@0.2.0: {}
++
+   fraction.js@4.3.7: {}
+ 
++  fresh@2.0.0: {}
++
+   fs-extra@10.1.0:
+     dependencies:
+       graceful-fs: 4.2.11
+@@ -7310,6 +7751,8 @@
+       merge2: 1.4.1
+       slash: 4.0.0
+ 
++  google-protobuf@3.21.4: {}
++
+   gopd@1.0.1:
+     dependencies:
+       get-intrinsic: 1.2.4
+@@ -7366,12 +7809,12 @@
+ 
+   highlight.js@11.10.0: {}
+ 
+-  histoire@0.17.15(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)):
++  histoire@0.17.15(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)):
+     dependencies:
+       '@akryum/tinypool': 0.3.1
+-      '@histoire/app': 0.17.17(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))
+-      '@histoire/controls': 0.17.17(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))
+-      '@histoire/shared': 0.17.17(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))
++      '@histoire/app': 0.17.17(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))
++      '@histoire/controls': 0.17.17(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))
++      '@histoire/shared': 0.17.17(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))
+       '@histoire/vendors': 0.17.17
+       '@types/flexsearch': 0.7.6
+       '@types/markdown-it': 12.2.3
+@@ -7398,8 +7841,8 @@
+       sade: 1.8.1
+       shiki-es: 0.2.0
+       sirv: 2.0.4
+-      vite: 5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)
+-      vite-node: 2.0.1(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)
++      vite: 5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)
++      vite-node: 2.0.1(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)
+     transitivePeerDependencies:
+       - '@types/node'
+       - bufferutil
+@@ -7435,6 +7878,14 @@
+       domutils: 3.1.0
+       entities: 4.5.0
+ 
++  http-errors@2.0.1:
++    dependencies:
++      depd: 2.0.0
++      inherits: 2.0.4
++      setprototypeof: 1.2.0
++      statuses: 2.0.2
++      toidentifier: 1.0.1
++
+   http-proxy-agent@5.0.0:
+     dependencies:
+       '@tootallnate/once': 2.0.0
+@@ -7472,6 +7923,10 @@
+     dependencies:
+       safer-buffer: 2.1.2
+ 
++  iconv-lite@0.7.0:
++    dependencies:
++      safer-buffer: 2.1.2
++
+   idb@8.0.0: {}
+ 
+   ignore@5.2.4: {}
+@@ -7513,6 +7968,8 @@
+       hasown: 2.0.2
+       side-channel: 1.0.6
+ 
++  ipaddr.js@1.9.1: {}
++
+   is-array-buffer@3.0.2:
+     dependencies:
+       call-bind: 1.0.2
+@@ -7594,6 +8051,8 @@
+ 
+   is-potential-custom-element-name@1.0.1: {}
+ 
++  is-promise@4.0.0: {}
++
+   is-regex@1.1.4:
+     dependencies:
+       call-bind: 1.0.7
+@@ -7994,6 +8453,10 @@
+ 
+   mdurl@2.0.0: {}
+ 
++  media-typer@1.1.0: {}
++
++  merge-descriptors@2.0.0: {}
++
+   merge-stream@2.0.0: {}
+ 
+   merge2@1.4.1: {}
+@@ -8010,10 +8473,16 @@
+ 
+   mime-db@1.52.0: {}
+ 
++  mime-db@1.54.0: {}
++
+   mime-types@2.1.35:
+     dependencies:
+       mime-db: 1.52.0
+ 
++  mime-types@3.0.2:
++    dependencies:
++      mime-db: 1.54.0
++
+   mimic-fn@2.1.0: {}
+ 
+   mimic-fn@4.0.0: {}
+@@ -8091,11 +8560,15 @@
+ 
+   natural-compare@1.4.0: {}
+ 
++  negotiator@1.0.0: {}
++
+   no-case@3.0.4:
+     dependencies:
+       lower-case: 2.0.2
+       tslib: 2.8.1
+ 
++  node-cron@4.2.1: {}
++
+   node-releases@2.0.14: {}
+ 
+   node-releases@2.0.18: {}
+@@ -8126,6 +8599,8 @@
+ 
+   object-inspect@1.13.2: {}
+ 
++  object-inspect@1.13.4: {}
++
+   object-keys@1.1.1: {}
+ 
+   object.assign@4.1.4:
+@@ -8170,6 +8645,10 @@
+   on-finished@2.3.0:
+     dependencies:
+       ee-first: 1.1.1
++
++  on-finished@2.4.1:
++    dependencies:
++      ee-first: 1.1.1
+ 
+   once@1.4.0:
+     dependencies:
+@@ -8284,6 +8763,8 @@
+       lru-cache: 10.4.3
+       minipass: 7.1.2
+ 
++  path-to-regexp@8.3.0: {}
++
+   path-type@4.0.0: {}
+ 
+   pathe@1.1.2: {}
+@@ -8694,6 +9175,11 @@
+ 
+   proto-list@1.2.4: {}
+ 
++  proxy-addr@2.0.7:
++    dependencies:
++      forwarded: 0.2.0
++      ipaddr.js: 1.9.1
++
+   proxy-from-env@1.1.0: {}
+ 
+   psl@1.9.0: {}
+@@ -8708,12 +9194,25 @@
+       pngjs: 5.0.0
+       yargs: 15.4.1
+ 
++  qs@6.14.0:
++    dependencies:
++      side-channel: 1.1.0
++
+   querystringify@2.2.0: {}
+ 
+   queue-microtask@1.2.3: {}
+ 
+   quick-lru@6.1.2: {}
+ 
++  range-parser@1.2.1: {}
++
++  raw-body@3.0.2:
++    dependencies:
++      bytes: 3.1.2
++      http-errors: 2.0.1
++      iconv-lite: 0.7.0
++      unpipe: 1.0.0
++
+   read-cache@1.0.0:
+     dependencies:
+       pify: 2.3.0
+@@ -8808,6 +9307,16 @@
+ 
+   rope-sequence@1.3.2: {}
+ 
++  router@2.2.0:
++    dependencies:
++      debug: 4.4.0
++      depd: 2.0.0
++      is-promise: 4.0.0
++      parseurl: 1.3.3
++      path-to-regexp: 8.3.0
++    transitivePeerDependencies:
++      - supports-color
++
+   rrweb-cssom@0.6.0: {}
+ 
+   rrweb-cssom@0.7.1: {}
+@@ -8882,12 +9391,39 @@
+ 
+   semver@7.6.3: {}
+ 
++  semver@7.7.1: {}
++
++  send@1.2.0:
++    dependencies:
++      debug: 4.4.0
++      encodeurl: 2.0.0
++      escape-html: 1.0.3
++      etag: 1.8.1
++      fresh: 2.0.0
++      http-errors: 2.0.1
++      mime-types: 3.0.2
++      ms: 2.1.3
++      on-finished: 2.4.1
++      range-parser: 1.2.1
++      statuses: 2.0.2
++    transitivePeerDependencies:
++      - supports-color
++
+   sentence-case@3.0.4:
+     dependencies:
+       no-case: 3.0.4
+       tslib: 2.8.1
+       upper-case-first: 2.0.2
+ 
++  serve-static@2.2.0:
++    dependencies:
++      encodeurl: 2.0.0
++      escape-html: 1.0.3
++      parseurl: 1.3.3
++      send: 1.2.0
++    transitivePeerDependencies:
++      - supports-color
++
+   set-blocking@2.0.0: {}
+ 
+   set-function-length@1.2.2:
+@@ -8906,6 +9442,8 @@
+       functions-have-names: 1.2.3
+       has-property-descriptors: 1.0.2
+ 
++  setprototypeof@1.2.0: {}
++
+   shebang-command@2.0.0:
+     dependencies:
+       shebang-regex: 3.0.0
+@@ -8916,6 +9454,26 @@
+ 
+   shiki-es@0.2.0: {}
+ 
++  side-channel-list@1.0.0:
++    dependencies:
++      es-errors: 1.3.0
++      object-inspect: 1.13.4
++
++  side-channel-map@1.0.1:
++    dependencies:
++      call-bound: 1.0.4
++      es-errors: 1.3.0
++      get-intrinsic: 1.3.0
++      object-inspect: 1.13.4
++
++  side-channel-weakmap@1.0.2:
++    dependencies:
++      call-bound: 1.0.4
++      es-errors: 1.3.0
++      get-intrinsic: 1.3.0
++      object-inspect: 1.13.4
++      side-channel-map: 1.0.1
++
+   side-channel@1.0.6:
+     dependencies:
+       call-bind: 1.0.7
+@@ -8923,6 +9481,14 @@
+       get-intrinsic: 1.3.0
+       object-inspect: 1.13.2
+ 
++  side-channel@1.1.0:
++    dependencies:
++      es-errors: 1.3.0
++      object-inspect: 1.13.4
++      side-channel-list: 1.0.0
++      side-channel-map: 1.0.1
++      side-channel-weakmap: 1.0.2
++
+   siginfo@2.0.0: {}
+ 
+   signal-exit@3.0.7: {}
+@@ -8993,6 +9559,8 @@
+ 
+   statuses@1.5.0: {}
+ 
++  statuses@2.0.2: {}
++
+   std-env@3.8.0: {}
+ 
+   stdin-discarder@0.2.2: {}
+@@ -9186,6 +9754,8 @@
+     dependencies:
+       is-number: 7.0.0
+ 
++  toidentifier@1.0.1: {}
++
+   totalist@3.0.1: {}
+ 
+   tough-cookie@4.1.4:
+@@ -9203,6 +9773,22 @@
+     dependencies:
+       punycode: 2.3.1
+ 
++  tronweb@6.1.0:
++    dependencies:
++      '@babel/runtime': 7.26.10
++      axios: 1.12.2
++      bignumber.js: 9.1.2
++      ethereum-cryptography: 2.2.1
++      ethers: 6.13.5
++      eventemitter3: 5.0.1
++      google-protobuf: 3.21.4
++      semver: 7.7.1
++      validator: 13.15.20
++    transitivePeerDependencies:
++      - bufferutil
++      - debug
++      - utf-8-validate
++
+   ts-interface-checker@0.1.13: {}
+ 
+   tsconfig-paths@3.15.0:
+@@ -9228,6 +9814,12 @@
+ 
+   type-fest@4.26.1: {}
+ 
++  type-is@2.0.1:
++    dependencies:
++      content-type: 1.0.5
++      media-typer: 1.1.0
++      mime-types: 3.0.2
++
+   typed-array-buffer@1.0.0:
+     dependencies:
+       call-bind: 1.0.2
+@@ -9348,6 +9940,10 @@
+ 
+   utils-merge@1.0.1: {}
+ 
++  validator@13.15.20: {}
++
++  vary@1.1.2: {}
++
+   video.js@7.18.1:
+     dependencies:
+       '@babel/runtime': 7.25.6
+@@ -9382,13 +9978,13 @@
+       video.js: 7.18.1
+       wavesurfer.js: 7.8.6
+ 
+-  vite-node@2.0.1(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0):
++  vite-node@2.0.1(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0):
+     dependencies:
+       cac: 6.7.14
+       debug: 4.4.0
+       pathe: 1.1.2
+       picocolors: 1.1.1
+-      vite: 5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)
++      vite: 5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)
+     transitivePeerDependencies:
+       - '@types/node'
+       - less
+@@ -9400,29 +9996,29 @@
+       - supports-color
+       - terser
+ 
+-  vite-plugin-ruby@5.0.0(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)):
++  vite-plugin-ruby@5.0.0(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)):
+     dependencies:
+       debug: 4.3.5
+       fast-glob: 3.3.2
+-      vite: 5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)
++      vite: 5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)
+     transitivePeerDependencies:
+       - supports-color
+ 
+-  vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0):
++  vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0):
+     dependencies:
+       esbuild: 0.21.5
+       postcss: 8.5.6
+       rollup: 4.52.5
+     optionalDependencies:
+-      '@types/node': 22.7.0
++      '@types/node': 22.7.5
+       fsevents: 2.3.3
+       sass: 1.79.3
+       terser: 5.33.0
+ 
+-  vitest@3.0.5(@types/node@22.7.0)(jsdom@24.1.3)(sass@1.79.3)(terser@5.33.0):
++  vitest@3.0.5(@types/node@22.7.5)(jsdom@24.1.3)(sass@1.79.3)(terser@5.33.0):
+     dependencies:
+       '@vitest/expect': 3.0.5
+-      '@vitest/mocker': 3.0.5(vite@5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0))
++      '@vitest/mocker': 3.0.5(vite@5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0))
+       '@vitest/pretty-format': 3.0.5
+       '@vitest/runner': 3.0.5
+       '@vitest/snapshot': 3.0.5
+@@ -9438,11 +10034,11 @@
+       tinyexec: 0.3.2
+       tinypool: 1.0.2
+       tinyrainbow: 2.0.0
+-      vite: 5.4.21(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)
+-      vite-node: 2.0.1(@types/node@22.7.0)(sass@1.79.3)(terser@5.33.0)
++      vite: 5.4.21(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)
++      vite-node: 2.0.1(@types/node@22.7.5)(sass@1.79.3)(terser@5.33.0)
+       why-is-node-running: 2.3.0
+     optionalDependencies:
+-      '@types/node': 22.7.0
++      '@types/node': 22.7.5
+       jsdom: 24.1.3
+     transitivePeerDependencies:
+       - less
+@@ -9668,6 +10264,8 @@
+ 
+   wrappy@1.0.2: {}
+ 
++  ws@8.17.1: {}
++
+   ws@8.18.0: {}
+ 
+   xml-name-validator@4.0.0: {}
+Index: tron.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tron.js b/tron.js
+new file mode 100644
+--- /dev/null	(revision 811a508e2fa96aaf825c4e92d71dd1c715268a1e)
++++ b/tron.js	(revision 811a508e2fa96aaf825c4e92d71dd1c715268a1e)
+@@ -0,0 +1,98 @@
++// server.js
++const express = require('express');
++const bodyParser = require('body-parser');
++const { TronWeb } = require('tronweb');
++const cron = require('node-cron');
++
++const app = express();
++app.use(bodyParser.json());
++
++// ---------------- TRON 节点配置 ----------------
++const tronConfig = {
++  fullHost: 'https://api.trongrid.io',
++  // 如果有API Key可以填
++};
++
++// TronWeb 实例（主链节点，不设置私钥）
++const tronWeb = new TronWeb(tronConfig);
++
++// TRC20 USDT 合约
++const USDT_CONTRACT = 'TXLAQ63Xg1NAzckPwKHvzw7CSEmLMEqcdj';
++const USDT_DECIMALS = 1_000_000;
++
++// 主钱包（收款）
++const MAIN_WALLET = 'T主钱包地址';
++const MAIN_PRIVATE_KEY = '主钱包私钥';
++
++// 模拟数据库保存订单和子钱包
++const orders = {}; // { orderId: { subWallet, privateKey, amount, paid } }
++
++// ---------------- 创建订单接口 ----------------
++app.post('/create-order', async (req, res) => {
++  try {
++    const { orderId, amount } = req.body;
++    if (!orderId || !amount)
++      return res.status(400).send('缺少 orderId 或 amount');
++
++    // 创建唯一子钱包
++    const account = await tronWeb.createAccount();
++    orders[orderId] = {
++      subWallet: account.address.base58,
++      privateKey: account.privateKey,
++      amount,
++      paid: false,
++    };
++
++    res.json({
++      subWallet: account.address.base58,
++      amount,
++      tronUrl: `tron://transfer?to=${account.address.base58}&amount=${amount}`,
++    });
++  } catch (err) {
++    console.error('创建订单失败:', err);
++    res.status(500).send('服务器错误');
++  }
++});
++
++// ---------------- 定时任务检查订单 ----------------
++cron.schedule('* * * * *', async () => {
++  console.log('检查订单入账...');
++  try {
++    const contract = await tronWeb.contract().at(USDT_CONTRACT);
++
++    for (const [orderId, order] of Object.entries(orders)) {
++      if (order.paid) continue;
++
++      const balance = await contract.methods.balanceOf(order.subWallet).call();
++      const balanceUsdt = Number(balance) / USDT_DECIMALS;
++
++      if (balanceUsdt >= order.amount) {
++        console.log(`订单 ${orderId} 已支付，开始归集到主钱包`);
++
++        // 用子钱包私钥创建新的 TronWeb 实例执行归集
++        const subTronWeb = new TronWeb({
++          ...tronConfig,
++          privateKey: order.privateKey,
++        });
++
++        await subTronWeb
++          .contract()
++          .at(USDT_CONTRACT)
++          .then(contract =>
++            contract.methods
++              .transfer(MAIN_WALLET, Math.floor(balanceUsdt * USDT_DECIMALS))
++              .send({ feeLimit: 1_000_000 })
++          );
++
++        order.paid = true;
++        console.log(`订单 ${orderId} 已归集到主钱包`);
++      }
++    }
++  } catch (err) {
++    console.error('定时检查失败:', err);
++  }
++});
++
++app.listen(3000, () => {
++  console.log('TRC20 收款服务已启动，端口 3000');
++});
+Index: app/javascript/dashboard/components/widgets/conversation/MessagePreview.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/components/widgets/conversation/MessagePreview.vue b/app/javascript/dashboard/components/widgets/conversation/MessagePreview.vue
+--- a/app/javascript/dashboard/components/widgets/conversation/MessagePreview.vue	(revision 811a508e2fa96aaf825c4e92d71dd1c715268a1e)
++++ b/app/javascript/dashboard/components/widgets/conversation/MessagePreview.vue	(revision 7c9f62c6fdf867eaf6bb39fd0ce2a7a13ccf751f)
+@@ -2,9 +2,12 @@
+ import { MESSAGE_TYPE } from 'widget/helpers/constants';
+ import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
+ import { ATTACHMENT_ICONS } from 'shared/constants/messages';
++import { useAccount } from 'dashboard/composables/useAccount';
++import UnpaidMessage from 'shared/components/UnpaidMessage.vue';
+ 
+ export default {
+   name: 'MessagePreview',
++  components: { UnpaidMessage },
+   props: {
+     message: {
+       type: Object,
+@@ -21,11 +24,20 @@
+   },
+   setup() {
+     const { getPlainText } = useMessageFormatter();
++    const { currentAccount } = useAccount();
+     return {
+       getPlainText,
++      currentAccount,
+     };
+   },
+   computed: {
++    isUnpaidAccount() {
++      const account = this.currentAccount;
++      return account.paid === false;
++    },
++    notPaidText() {
++      return '💰️当前为免费试用仅供测试';
++    },
+     messageByAgent() {
+       const { message_type: messageType } = this.message;
+       return messageType === MESSAGE_TYPE.OUTGOING;
+@@ -92,6 +104,7 @@
+     </span>
+     <span v-else-if="message.content">
+       {{ parsedLastMessage }}
++      <UnpaidMessage />
+     </span>
+     <span v-else-if="message.attachments">
+       <fluent-icon
+Index: app/javascript/dashboard/routes/dashboard/settings/payment/components/pay.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/routes/dashboard/settings/payment/components/pay.vue b/app/javascript/dashboard/routes/dashboard/settings/payment/components/pay.vue
+new file mode 100644
+--- /dev/null	(revision c43067d1983fcba1d47f1bb77dee2d31dba0147a)
++++ b/app/javascript/dashboard/routes/dashboard/settings/payment/components/pay.vue	(revision c43067d1983fcba1d47f1bb77dee2d31dba0147a)
+@@ -0,0 +1,114 @@
++<script>
++import { ref, onMounted } from 'vue';
++import QRCode from 'qrcode';
++import axios from 'axios';
++import BuildInfo from './components/BuildInfo.vue';
++
++export default {
++  components: {
++    BuildInfo,
++  },
++  setup() {
++    const order = ref({
++      subWallet: '',
++      amount: 0,
++      received: 0,
++      paid: false,
++    });
++    const qrcodeCanvas = ref(null);
++    const orderId = 'order123'; // 真实项目用动态订单ID
++
++    // 创建订单
++    const createOrder = async () => {
++      const res = await axios.post('http://localhost:3000/create-order', {
++        orderId,
++        amount: 10,
++      });
++      order.value.subWallet = res.data.subWallet;
++      order.value.amount = res.data.amount;
++
++      QRCode.toCanvas(qrcodeCanvas.value, res.data.tronUrl, { width: 200 });
++    };
++
++    // 轮询订单状态
++    const pollOrderStatus = async () => {
++      const res = await axios.get(
++        `http://localhost:3000/order-status/${orderId}`
++      );
++      order.value.paid = res.data.paid;
++      order.value.received = res.data.received;
++
++      if (!order.value.paid) {
++        setTimeout(pollOrderStatus, 5000); // 每5秒查询一次
++      }
++    };
++
++    const copyAddress = () => {
++      navigator.clipboard.writeText(order.value.subWallet);
++      alert('地址已复制');
++    };
++
++    onMounted(async () => {
++      await createOrder();
++      pollOrderStatus();
++    });
++
++    return { order, qrcodeCanvas, copyAddress };
++  },
++};
++</script>
++
++<template>
++  <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
++    <!-- Header -->
++    <div class="flex items-center justify-between mb-6">
++      <h1 class="text-2xl font-bold">等待付款</h1>
++      <p class="text-gray-500">请通过下面的地址和金额完成付款，系统将自动确认和开通。</p>
++    </div>
++
++    <!-- Payment Details -->
++    <div class="bg-gray-100 p-4 rounded-lg mb-6">
++      <div class="flex justify-between mb-4">
++        <div class="text-sm font-semibold text-gray-700">USDT 收款钱包地址 (TRC20)</div>
++        <button class="text-blue-500 text-sm">查看二维码</button>
++      </div>
++      <div class="bg-white p-4 rounded-lg shadow-md">
++        <input type="text" value="TMEoJbAxd7zNwXv3QYbJ1T2rFn7NWstBJ" readonly class="w-full bg-gray-200 p-2 rounded-md text-center text-gray-700 mb-4">
++        <div class="flex justify-between items-center">
++          <button class="text-blue-500">复制地址</button>
++          <div class="text-lg font-bold">转账金额</div>
++          <input type="text" value="588" readonly class="bg-gray-200 p-2 rounded-md text-center text-gray-700">
++        </div>
++      </div>
++      <div>
++        <div class="mt-4 text-sm text-gray-600">
++          <p>请仔细确认是否为 USDT 和 TRC20 网络。</p>
++          <p>请仔细确认收款地址和转账金额，错误地址或金额负责自负。</p>
++          <p>当前页面已加密，请放心付款</p>
++        </div>
++        <img
++          src="/vite-dev/dashboard/assets/images/payment/logo.png"
++          class="w-10 h-10"
++        />
++      </div>
++    </div>
++
++    <!-- Purchase Information -->
++    <div class="bg-gray-100 p-4 rounded-lg">
++      <h3 class="text-lg font-semibold mb-2">您的购买信息</h3>
++      <div class="space-y-2">
++        <p><strong>方案:</strong> Team</p>
++        <p><strong>账户数:</strong> 1</p>
++        <p><strong>价格:</strong> 588 USD</p>
++      </div>
++      <div class="mt-4 flex items-center">
++        <button class="bg-red-600 text-white py-2 px-4 rounded-md text-sm">取消此订单</button>
++        <p class="ml-4 text-gray-500 text-sm">然后重新选择</p>
++        <img
++          src="/vite-dev/dashboard/assets/images/payment/pay.svg"
++          class="w-4 h-4"
++        />
++      </div>
++    </div>
++  </div>
++</template>
+Index: dfdf.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/dfdf.html b/dfdf.html
+new file mode 100644
+--- /dev/null	(revision 9c79d66711642cdda9dd44f9e4ac0fa995c01ef1)
++++ b/dfdf.html	(revision 9c79d66711642cdda9dd44f9e4ac0fa995c01ef1)
+@@ -0,0 +1,52 @@
++<!DOCTYPE html>
++<html lang="en">
++<head>
++  <meta charset="UTF-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1.0">
++  <title>Payment Waiting Page</title>
++  <script src="https://cdn.tailwindcss.com"></script>
++</head>
++<body class="bg-gray-50 p-6 font-sans">
++<div class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
++  <!-- Header -->
++  <div class="flex items-center justify-between mb-6">
++    <h1 class="text-2xl font-bold">等待付款</h1>
++    <p class="text-gray-500">请通过下面的地址和金额完成付款，系统将自动确认和开通。</p>
++  </div>
++
++  <!-- Payment Details -->
++  <div class="bg-gray-100 p-4 rounded-lg mb-6">
++    <div class="flex justify-between mb-4">
++      <div class="text-sm font-semibold text-gray-700">USDT 收款钱包地址 (TRC20)</div>
++      <button class="text-blue-500 text-sm">查看二维码</button>
++    </div>
++    <div class="bg-white p-4 rounded-lg shadow-md">
++      <input type="text" value="TMEoJbAxd7zNwXv3QYbJ1T2rFn7NWstBJ" readonly class="w-full bg-gray-200 p-2 rounded-md text-center text-gray-700 mb-4">
++      <div class="flex justify-between items-center">
++        <button class="text-blue-500">复制地址</button>
++        <div class="text-lg font-bold">转账金额</div>
++        <input type="text" value="588" readonly class="bg-gray-200 p-2 rounded-md text-center text-gray-700">
++      </div>
++    </div>
++    <div class="mt-4 text-sm text-gray-600">
++      <p>请仔细确认是否为 USDT 和 TRC20 网络。</p>
++      <p>请仔细确认收款地址和转账金额，错误地址或金额负责自负。</p>
++    </div>
++  </div>
++
++  <!-- Purchase Information -->
++  <div class="bg-gray-100 p-4 rounded-lg">
++    <h3 class="text-lg font-semibold mb-2">您的购买信息</h3>
++    <div class="space-y-2">
++      <p><strong>方案:</strong> Team</p>
++      <p><strong>账户数:</strong> 1</p>
++      <p><strong>价格:</strong> 588 USD</p>
++    </div>
++    <div class="mt-4 flex items-center">
++      <button class="bg-red-600 text-white py-2 px-4 rounded-md text-sm">取消此订单</button>
++      <p class="ml-4 text-gray-500 text-sm">然后重新选择</p>
++    </div>
++  </div>
++</div>
++</body>
++</html>
+Index: app/controllers/widgets_controller.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/controllers/widgets_controller.rb b/app/controllers/widgets_controller.rb
+--- a/app/controllers/widgets_controller.rb	(revision 9c79d66711642cdda9dd44f9e4ac0fa995c01ef1)
++++ b/app/controllers/widgets_controller.rb	(revision 76dfb8e50dc351d35c4cf331d4fbee6c7b922259)
+@@ -11,6 +11,10 @@
+   before_action :build_contact
+   after_action :allow_iframe_requests
+ 
++  def show_web_widgets
++    permitted_params[:website_token]
++  end
++
+   private
+ 
+   def set_global_config
+Index: app/views/widgets/show_web_widgets.html.erb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/views/widgets/show_web_widgets.html.erb b/app/views/widgets/show_web_widgets.html.erb
+new file mode 100644
+--- /dev/null	(revision 76dfb8e50dc351d35c4cf331d4fbee6c7b922259)
++++ b/app/views/widgets/show_web_widgets.html.erb	(revision 76dfb8e50dc351d35c4cf331d4fbee6c7b922259)
+@@ -0,0 +1,10 @@
++<!DOCTYPE html>
++<html lang="en">
++<head>
++  <meta charset="UTF-8">
++  <title>Preview</title>
++</head>
++<body>
++<%= raw @web_widget.web_widget_script %>
++</body>
++</html>
+Index: config/routes.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/config/routes.rb b/config/routes.rb
+--- a/config/routes.rb	(revision 9c79d66711642cdda9dd44f9e4ac0fa995c01ef1)
++++ b/config/routes.rb	(revision 76dfb8e50dc351d35c4cf331d4fbee6c7b922259)
+@@ -26,6 +26,8 @@
+     get '/app/accounts/:account_id/settings/inboxes/:inbox_id', to: 'dashboard#index', as: 'app_email_inbox_settings'
+ 
+     resource :widget, only: [:show]
++    get 'preview_web_widget', to: 'widgets#show_web_widgets'
++
+     namespace :survey do
+       resources :responses, only: [:show]
+     end
+Index: lib/seeders/test_account_seeder.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/seeders/test_account_seeder.rb b/lib/seeders/test_account_seeder.rb
+new file mode 100644
+--- /dev/null	(revision e8ed7150a9c40ec2e0e649ee3e1babaa044ac11a)
++++ b/lib/seeders/test_account_seeder.rb	(revision e8ed7150a9c40ec2e0e649ee3e1babaa044ac11a)
+@@ -0,0 +1,70 @@
++## Class to generate sample data for a chatwoot test @Account.
++############################################################
++### Usage #####
++#
++#   # Seed an account with all data types in this class
++#   Seeders::AccountSeeder.new(account: Account.find(1)).perform!
++#
++
++# Seeders::TestAccountSeeder.new(account, user).perform!
++
++############################################################
++
++class Seeders::TestAccountSeeder
++  attr_reader :account, :user
++  def initialize(account:, user:)
++    @account = account
++    @user = user
++  end
++
++  def perform!
++    seed_website_inbox
++  end
++
++  def seed_website_inbox
++    binding.pry
++
++    # channel = Channel::WebWidget.create!(account: @account, website_url: "http://localhost:3000")
++    # Inbox.create!(channel: channel, account: @account, name: "Test Website")
++    web_widget = Channel::WebWidget.create!(account: account, website_url: 'http://localhost:3000')
++
++    inbox = Inbox.create!(channel: web_widget, account: account, name: 'test Support3')
++    InboxMember.create!(user: user, inbox: inbox)
++
++    contact_inbox = ContactInboxWithContactBuilder.new(
++      source_id: user.id,
++      inbox: inbox,
++      hmac_verified: true,
++      # todo: use user email
++      contact_attributes: { name: 'jane', email: 'jane@example.com', phone_number: '+2320000' }
++    ).perform
++
++    conversation = Conversation.create!(
++      account: account,
++      inbox: inbox,
++      status: :open,
++      assignee: user,
++      contact: contact_inbox.contact,
++      contact_inbox: contact_inbox,
++      additional_attributes: {}
++    )
++
++    # sample email collect
++    # Seeders::MessageSeeder.create_sample_email_collect_message conversation
++
++    # Message.create!(content: 'Hello', account: account, inbox: inbox, conversation: conversation, sender: contact_inbox.contact,
++    #                 message_type: :incoming)
++    # # sample card
++    # Seeders::MessageSeeder.create_sample_cards_message conversation
++    # # input select
++    # Seeders::MessageSeeder.create_sample_input_select_message conversation
++    # # form
++    # Seeders::MessageSeeder.create_sample_form_message conversation
++    # # articles
++    # Seeders::MessageSeeder.create_sample_articles_message conversation
++    # # csat
++    # Seeders::MessageSeeder.create_sample_csat_collect_message conversation
++    #
++    # CannedResponse.create!(account: account, short_code: 'start', content: 'Hello welcome to.')
++  end
++end
+Index: app/controllers/api/v2/accounts_controller.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/controllers/api/v2/accounts_controller.rb b/app/controllers/api/v2/accounts_controller.rb
+--- a/app/controllers/api/v2/accounts_controller.rb	(revision 76dfb8e50dc351d35c4cf331d4fbee6c7b922259)
++++ b/app/controllers/api/v2/accounts_controller.rb	(revision e8ed7150a9c40ec2e0e649ee3e1babaa044ac11a)
+@@ -20,7 +20,8 @@
+       locale: account_params[:locale],
+       user: current_user
+     ).perform
+-
++    # check when use v2 to create account
++    # Seeders::TestAccountSeeder.new(account: @account, user: @user).perform!
+     fetch_account_and_user_info
+     update_account_info if @account.present?
+ 
+Index: weicome.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/weicome.html b/weicome.html
+new file mode 100644
+--- /dev/null	(revision d2464356e88df3e6ec866a4da5069425c106e094)
++++ b/weicome.html	(revision d2464356e88df3e6ec866a4da5069425c106e094)
+@@ -0,0 +1,40 @@
++<!DOCTYPE html>
++<html lang="en">
++<head>
++  <meta charset="UTF-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1.0">
++  <title>Reply Bot</title>
++  <script src="https://cdn.tailwindcss.com"></script>
++</head>
++<body class="bg-gray-100 font-sans">
++<div class="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
++  <!-- Header -->
++  <div class="text-center">
++    <h1 class="text-2xl font-semibold text-gray-800 mb-4">Hey, 欢迎来到 Reply Bot！</h1>
++    <p class="text-gray-600">感谢您的注册。请按下面的步骤，立刻开始使用我们的平台为您的客户提供服务吧。</p>
++  </div>
++
++  <!-- Direct link section -->
++  <div class="mt-6">
++    <h2 class="text-xl font-semibold text-gray-800 mb-2">对话链接，一秒激活</h2>
++    <p class="text-gray-600 mb-4">使用对话链接，可以让客户在互联网上任何地方直接联系您。</p>
++    <div class="flex flex-col items-center">
++      <input type="text" value="https://*****.talkvv.com" class="p-2 border rounded-lg w-80 text-center mb-4">
++      <p class="text-gray-500">您的专属对话链接（注意：免费试用链接在微信中不可用，如需在微信中使用请升级付费版）</p>
++    </div>
++  </div>
++
++  <!-- QR Code Section -->
++  <div class="flex justify-center mt-6">
++    <img src="path-to-your-qr-code.png" alt="QR Code" class="w-40 h-40">
++  </div>
++
++  <!-- Payment Options -->
++  <div class="mt-6">
++    <h3 class="text-xl font-semibold text-gray-800 mb-2">选择付费方案</h3>
++    <p class="text-gray-600 mb-4">请选择一个合适的方案，并完成付款后，即可通过您的接入渠道服务客户。我们支持银行卡、支付宝和数字货币支付。</p>
++    <button class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">选择付费方案</button>
++  </div>
++</div>
++</body>
++</html>
+Index: plan.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/plan.html b/plan.html
+new file mode 100644
+--- /dev/null	(revision 6c206648d9a3f9bfef0770ce263b2e62db5d957a)
++++ b/plan.html	(revision 6c206648d9a3f9bfef0770ce263b2e62db5d957a)
+@@ -0,0 +1,74 @@
++<!DOCTYPE html>
++<html lang="en">
++<head>
++  <meta charset="UTF-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1.0">
++  <title>Team Plan</title>
++  <script src="https://cdn.tailwindcss.com"></script>
++</head>
++<body class="bg-gray-100 text-gray-800">
++
++<div class="max-w-7xl mx-auto px-6 py-12">
++  <!-- Header Section -->
++  <div class="flex justify-between items-center mb-12">
++    <div>
++      <h1 class="text-4xl font-semibold text-gray-900">团队版 / Team</h1>
++      <p class="text-lg text-gray-600 mt-2">您可以根据您的需求和预算，找到最适合的选项。让我们帮助您提升客户服务效率，同时确保成本在掌控之中。</p>
++    </div>
++    <div>
++      <h2 class="text-5xl font-extrabold text-blue-600">588 USD</h2>
++      <p class="text-xl text-gray-600">每帐号每年</p>
++    </div>
++  </div>
++
++  <!-- Features List -->
++  <div class="bg-white p-8 rounded-lg shadow-md">
++    <h3 class="text-xl font-semibold text-gray-800 mb-4">适合大多数小团队的客服场景</h3>
++    <ul class="space-y-3 text-gray-700">
++      <li class="flex items-center">
++        <svg class="w-5 h-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
++          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
++        </svg>
++        多渠道接入
++      </li>
++      <li class="flex items-center">
++        <svg class="w-5 h-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
++          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
++        </svg>
++        一键生成聊天链接
++      </li>
++      <li class="flex items-center">
++        <svg class="w-5 h-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
++          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
++        </svg>
++        免费消息自动翻译
++      </li>
++      <li class="flex items-center">
++        <svg class="w-5 h-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
++          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
++        </svg>
++        高级自动化规则
++      </li>
++      <li class="flex items-center">
++        <svg class="w-5 h-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
++          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
++        </svg>
++        报表和统计
++      </li>
++      <li class="flex items-center">
++        <svg class="w-5 h-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
++          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
++        </svg>
++        攻击防护系统
++      </li>
++    </ul>
++  </div>
++
++  <!-- Call to Action Button -->
++  <div class="mt-8 text-center">
++    <a href="#" class="bg-blue-600 text-white text-lg font-semibold px-6 py-3 rounded-lg hover:bg-blue-700">立即开始试用</a>
++  </div>
++</div>
++
++</body>
++</html>
+Index: app/javascript/dashboard/routes/dashboard/settings/payment/pages/Pay.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/routes/dashboard/settings/payment/pages/Pay.vue b/app/javascript/dashboard/routes/dashboard/settings/payment/pages/Pay.vue
+new file mode 100644
+--- /dev/null	(revision c43067d1983fcba1d47f1bb77dee2d31dba0147a)
++++ b/app/javascript/dashboard/routes/dashboard/settings/payment/pages/Pay.vue	(revision c43067d1983fcba1d47f1bb77dee2d31dba0147a)
+@@ -0,0 +1,191 @@
++<script>
++import { ref, onMounted } from 'vue';
++import QRCode from 'qrcode';
++import axios from 'axios';
++import { useAccount } from 'dashboard/composables/useAccount';
++import { useAlert } from 'dashboard/composables';
++import { copyTextToClipboard } from 'shared/helpers/clipboard';
++import NextButton from 'dashboard/components-next/button/Button.vue';
++
++export default {
++  components: {
++    NextButton,
++  },
++  setup() {
++    const order = ref({
++      subWallet: 'eee',
++      amount: 0,
++      received: 0,
++      paid: false,
++    });
++    const qrCode = ref(null);
++    const orderId = 'order123'; // 真实项目用动态订单ID
++    const { accountId } = useAccount();
++    // 创建订单
++    const createOrder = async () => {
++      // const res = await axios.post('http://localhost:3000/create-order', {
++      //   orderId,
++      //   amount: 10,
++      // });
++      // order.value.subWallet = res.data.subWallet;
++      // order.value.amount = res.data.amount;
++      // qrCode.value = await QRCode.toDataURL('prewWidgetUrl.value');
++      // QRCode.toCanvas(qrcodeCanvas.value, 'res.data.tronUrl', { width: 200 });
++    };
++
++    const createQR = async () => {
++      qrCode.value = await QRCode.toDataURL('this.prewWidgetUrl.value');
++    };
++
++    // 轮询订单状态
++    const pollOrderStatus = async () => {
++      const res = await axios.get(
++        `http://localhost:3000/order-status/${orderId}`
++      );
++      order.value.paid = res.data.paid;
++      order.value.received = res.data.received;
++
++      if (!order.value.paid) {
++        setTimeout(pollOrderStatus, 5000); // 每5秒查询一次
++      }
++    };
++
++    const copyAddress = () => {
++      navigator.clipboard.writeText(order.value.subWallet);
++      alert('地址已复制');
++    };
++
++    onMounted(async () => {
++      await createOrder();
++      pollOrderStatus();
++    });
++
++    return { order, qrCode, copyAddress, createQR, accountId };
++  },
++  methods: {
++    async onCopy(e) {
++      e.preventDefault();
++      await copyTextToClipboard(this.order.subWallet);
++      useAlert('复制成功');
++    },
++  },
++};
++</script>
++
++<template>
++  <div
++    class="max-w-4xl w-full h-full mx-auto bg-white shadow-lg rounded-lg p-6"
++  >
++    <!-- Header -->
++    <div class="flex items-center justify-between mb-6">
++      <h1 class="text-2xl font-bold">等待付款</h1>
++      <p class="text-gray-500">
++        请通过下面的地址和金额完成付款，系统将自动确认和开通。
++      </p>
++    </div>
++
++    <!-- Payment Details -->
++    <div class="bg-gray-100 p-4 rounded-lg mb-6">
++      <div class="bg-white p-4 rounded-lg shadow-md">
++        <div class="address-label">USDT 收款钱包地址 (TRC20)</div>
++        <div class="address-container">
++          <input
++            id="address__input"
++            type="text"
++            style="margin-bottom: 0"
++            value="TMEoJbAxd7zNwXv3QYbJ1T2rFn7NWstBJ"
++            readonly
++            class="address__input"
++          />
++          <NextButton
++            faded
++            slate
++            type="button"
++            icon="i-lucide-copy"
++            class="flex-shrink-0"
++            @click="onCopy"
++          >
++            复制地址
++          </NextButton>
++
++          <NextButton
++            v-if="!qrCode"
++            faded
++            slate
++            type="button"
++            icon="i-lucide-copy"
++            class="flex-shrink-0"
++            @click="createQR"
++          >
++            查看二维码
++          </NextButton>
++          <img v-if="qrCode" :src="qrCode" alt="QR Code" class="w-40 h-40" />
++        </div>
++        <div class="amount-container">
++          <div class="text-lg font-bold">转账金额</div>
++          <input type="text" class="amount__input" value="588" readonly />
++        </div>
++      </div>
++      <div class="inline-flex gap-16">
++        <div class="mt-4 text-sm text-gray-600">
++          <p>请仔细确认是否为 USDT 和 TRC20 网络。</p>
++          <p>请仔细确认收款地址和转账金额，错误地址或金额负责自负。</p>
++          <p>当前页面已加密，请放心付款</p>
++        </div>
++        <img src="dashboard/assets/images/logo.png" class="w-10 h-10" />
++      </div>
++    </div>
++
++    <!-- Purchase Information -->
++    <div class="bg-gray-100 p-4 rounded-lg">
++      <h3 class="text-lg font-semibold mb-2">您的购买信息</h3>
++      <div class="space-y-2">
++        <p><strong>方案:</strong> Team</p>
++        <p><strong>账户数:</strong> 1</p>
++        <p><strong>价格:</strong> 588 USD</p>
++      </div>
++      <div class="mt-4 flex items-center">
++        <router-link
++          :to="{ name: 'plan_list', prams: { accountId: accountId } }"
++        >
++          <button class="bg-blue-600 text-white py-2 px-4 rounded-md text-sm">
++            取消此订单
++          </button>
++        </router-link>
++
++        <p class="ml-4 text-gray-500 text-sm">然后重新选择</p>
++      </div>
++    </div>
++  </div>
++</template>
++
++<style lang="scss" scoped>
++.address-container {
++  display: inline-flex;
++  margin-bottom: 20px;
++  margin-top: 20px;
++}
++
++.address__input {
++  margin-bottom: 0 !important;
++  width: 350px !important;
++}
++
++.amount-container {
++  display: flex;
++  flex-direction: column;
++  gap: 10px;
++}
++
++.amount__input {
++  width: 350px !important;
++}
++
++//.address__copy {
++//  width: 120px;
++//}
++//
++//.address__qr {
++//  width: 150px;
++//}
++</style>
+Index: app/javascript/dashboard/routes/dashboard/settings/payment/pages/Plan.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/routes/dashboard/settings/payment/pages/Plan.vue b/app/javascript/dashboard/routes/dashboard/settings/payment/pages/Plan.vue
+new file mode 100644
+--- /dev/null	(revision 177212d75de0459645987fc9ef43ac481a48160c)
++++ b/app/javascript/dashboard/routes/dashboard/settings/payment/pages/Plan.vue	(revision 177212d75de0459645987fc9ef43ac481a48160c)
+@@ -0,0 +1,135 @@
++<template>
++  <div class="max-w-7xl mx-auto px-6 py-12">
++    <!-- Header Section -->
++    <div class="flex justify-between items-center mb-12">
++      <div>
++        <h1 class="text-4xl font-semibold text-gray-900">团队版 / Team</h1>
++        <p class="text-lg text-gray-600 mt-2">
++          您可以根据您的需求和预算，找到最适合的选项。让我们帮助您提升客户服务效率，同时确保成本在掌控之中。
++        </p>
++      </div>
++      <div>
++        <h2 class="text-5xl font-extrabold text-blue-600">588 USD</h2>
++        <p class="text-xl text-gray-600">每帐号每年</p>
++      </div>
++    </div>
++
++    <!-- Features List -->
++    <div class="bg-white p-8 rounded-lg shadow-md">
++      <h3 class="text-xl font-semibold text-gray-800 mb-4">
++        适合大多数小团队的客服场景
++      </h3>
++      <ul class="space-y-3 text-gray-700">
++        <li class="flex items-center">
++          <svg
++            class="w-5 h-5 text-green-500 mr-2"
++            xmlns="http://www.w3.org/2000/svg"
++            fill="none"
++            viewBox="0 0 24 24"
++            stroke="currentColor"
++          >
++            <path
++              stroke-linecap="round"
++              stroke-linejoin="round"
++              stroke-width="2"
++              d="M5 13l4 4L19 7"
++            />
++          </svg>
++          多渠道接入
++        </li>
++        <li class="flex items-center">
++          <svg
++            class="w-5 h-5 text-green-500 mr-2"
++            xmlns="http://www.w3.org/2000/svg"
++            fill="none"
++            viewBox="0 0 24 24"
++            stroke="currentColor"
++          >
++            <path
++              stroke-linecap="round"
++              stroke-linejoin="round"
++              stroke-width="2"
++              d="M5 13l4 4L19 7"
++            />
++          </svg>
++          一键生成聊天链接
++        </li>
++        <li class="flex items-center">
++          <svg
++            class="w-5 h-5 text-green-500 mr-2"
++            xmlns="http://www.w3.org/2000/svg"
++            fill="none"
++            viewBox="0 0 24 24"
++            stroke="currentColor"
++          >
++            <path
++              stroke-linecap="round"
++              stroke-linejoin="round"
++              stroke-width="2"
++              d="M5 13l4 4L19 7"
++            />
++          </svg>
++          免费消息自动翻译
++        </li>
++        <li class="flex items-center">
++          <svg
++            class="w-5 h-5 text-green-500 mr-2"
++            xmlns="http://www.w3.org/2000/svg"
++            fill="none"
++            viewBox="0 0 24 24"
++            stroke="currentColor"
++          >
++            <path
++              stroke-linecap="round"
++              stroke-linejoin="round"
++              stroke-width="2"
++              d="M5 13l4 4L19 7"
++            />
++          </svg>
++          高级自动化规则
++        </li>
++        <li class="flex items-center">
++          <svg
++            class="w-5 h-5 text-green-500 mr-2"
++            xmlns="http://www.w3.org/2000/svg"
++            fill="none"
++            viewBox="0 0 24 24"
++            stroke="currentColor"
++          >
++            <path
++              stroke-linecap="round"
++              stroke-linejoin="round"
++              stroke-width="2"
++              d="M5 13l4 4L19 7"
++            />
++          </svg>
++          报表和统计
++        </li>
++        <li class="flex items-center">
++          <svg
++            class="w-5 h-5 text-green-500 mr-2"
++            xmlns="http://www.w3.org/2000/svg"
++            fill="none"
++            viewBox="0 0 24 24"
++            stroke="currentColor"
++          >
++            <path
++              stroke-linecap="round"
++              stroke-linejoin="round"
++              stroke-width="2"
++              d="M5 13l4 4L19 7"
++            />
++          </svg>
++          攻击防护系统
++        </li>
++      </ul>
++    </div>
++
++    <div class="mt-8 text-center">
++      <router-link :to="{ name: 'payment_list' }">
++        <a class="text-blue-500 text-sm">立即开始试用</a>
++      </router-link>
++      <!--      <a href="#" class="bg-blue-600 text-blue-500 text-lg font-semibold px-6 py-3 rounded-lg hover:bg-blue-700">立即开始试用</a>-->
++    </div>
++  </div>
++</template>
+Index: app/controllers/api/v1/accounts_controller.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/controllers/api/v1/accounts_controller.rb b/app/controllers/api/v1/accounts_controller.rb
+--- a/app/controllers/api/v1/accounts_controller.rb	(revision 177212d75de0459645987fc9ef43ac481a48160c)
++++ b/app/controllers/api/v1/accounts_controller.rb	(revision ad899ea55ef44b0dea6706443eaaf3c6c00b84d8)
+@@ -18,6 +18,14 @@
+ 
+   def show
+     @latest_chatwoot_version = ::Redis::Alfred.get(::Redis::Alfred::LATEST_CHATWOOT_VERSION)
++    web_widget = @account&.web_widgets[0]
++    inbox = web_widget&.inbox
++    @website_token = web_widget&.website_token
++    contact_inbox = inbox&.contact_inboxes.first
++    if contact_inbox.present? && inbox.present?
++      payload = { source_id: contact_inbox.source_id, inbox_id: inbox.id }
++      @cw_conversation= ::Widget::TokenService.new(payload: payload).generate_token
++    end
+     render 'api/v1/accounts/show', format: :json
+   end
+ 
+@@ -30,6 +38,7 @@
+       locale: account_params[:locale],
+       user: current_user
+     ).perform
++    Seeders::TestAccountSeeder.new(account: @account, user: @user).perform!
+     if @user
+       send_auth_headers(@user)
+       render 'api/v1/accounts/create', format: :json, locals: { resource: @user }
+Index: app/controllers/devise_overrides/omniauth_callbacks_controller.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/controllers/devise_overrides/omniauth_callbacks_controller.rb b/app/controllers/devise_overrides/omniauth_callbacks_controller.rb
+--- a/app/controllers/devise_overrides/omniauth_callbacks_controller.rb	(revision 177212d75de0459645987fc9ef43ac481a48160c)
++++ b/app/controllers/devise_overrides/omniauth_callbacks_controller.rb	(revision e8ed7150a9c40ec2e0e649ee3e1babaa044ac11a)
+@@ -79,6 +79,7 @@
+       locale: I18n.locale,
+       confirmed: auth_hash['info']['email_verified']
+     ).perform
++    # Seeders::TestAccountSeeder.new(account: @account, user: @user).perform!
+     Avatar::AvatarFromUrlJob.perform_later(@resource, auth_hash['info']['image'])
+   end
+ 
+Index: app/javascript/v3/views/auth/signup/components/Signup/Form.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/v3/views/auth/signup/components/Signup/Form.vue b/app/javascript/v3/views/auth/signup/components/Signup/Form.vue
+--- a/app/javascript/v3/views/auth/signup/components/Signup/Form.vue	(revision 177212d75de0459645987fc9ef43ac481a48160c)
++++ b/app/javascript/v3/views/auth/signup/components/Signup/Form.vue	(revision e8ed7150a9c40ec2e0e649ee3e1babaa044ac11a)
+@@ -12,7 +12,7 @@
+ import { isValidPassword } from 'shared/helpers/Validators';
+ import GoogleOAuthButton from '../../../../../components/GoogleOauth/Button.vue';
+ import { register } from '../../../../../api/auth';
+-import * as CompanyEmailValidator from 'company-email-validator';
++// import * as CompanyEmailValidator from 'company-email-validator';
+ 
+ const MIN_PASSWORD_LENGTH = 6;
+ const SPECIAL_CHAR_REGEX = /[!@#$%^&*()_+\-=[\]{}|'"/\\.,`<>:;?~]/;
+@@ -58,8 +58,8 @@
+         email: {
+           required,
+           email,
+-          businessEmailValidator(value) {
+-            return CompanyEmailValidator.isCompanyEmail(value);
++          businessEmailValidator() {
++            return true; // CompanyEmailValidator.isCompanyEmail(value);
+           },
+         },
+         password: {
+Index: app/javascript/dashboard/components/widgets/conversation/UnPaidOnboardingView.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/components/widgets/conversation/UnPaidOnboardingView.vue b/app/javascript/dashboard/components/widgets/conversation/UnPaidOnboardingView.vue
+new file mode 100644
+--- /dev/null	(revision b77d7c0f5c149a95ad7ae4dde5d56bbd429cdc7a)
++++ b/app/javascript/dashboard/components/widgets/conversation/UnPaidOnboardingView.vue	(revision b77d7c0f5c149a95ad7ae4dde5d56bbd429cdc7a)
+@@ -0,0 +1,86 @@
++<script setup>
++import { computed } from 'vue';
++import { ref, onMounted } from 'vue';
++import QRCode from 'qrcode';
++import { useAccount } from 'dashboard/composables/useAccount';
++import Button from 'dashboard/components-next/button/Button.vue';
++import { copyTextToClipboard } from 'shared/helpers/clipboard';
++import { useAlert } from 'dashboard/composables';
++
++const { currentAccount, accountId } = useAccount();
++const prewWidgetUrl = computed(() => {
++  const account = currentAccount.value;
++  // todo: use real domain
++  return (
++    'http://localhost:3000/widget?website_token=' +
++    account.preview_websiteToken +
++    '&cw_conversation=' +
++    account.token
++  );
++});
++const qrCode = ref('');
++
++const onCopy = async () => {
++  await copyTextToClipboard(prewWidgetUrl.value);
++  useAlert('地址复制成功，请在新的页面打开');
++};
++
++onMounted(async () => {
++  qrCode.value = await QRCode.toDataURL(prewWidgetUrl.value);
++});
++</script>
++
++<template>
++  <div class="max-w-4xl w-full h-full p-6 bg-white shadow-lg rounded-lg mt-10">
++    <!-- Header -->
++    <div class="text-center">
++      <h1 class="text-2xl font-semibold text-gray-800 mb-4">
++        Hey, 欢迎来到 Reply Bot！
++      </h1>
++      <p class="text-gray-600">
++        感谢您的注册。请按下面的步骤，立刻开始使用我们的平台为您的客户提供服务吧。
++      </p>
++    </div>
++
++    <!-- Direct link section -->
++    <div class="mt-6">
++      <h2 class="text-xl font-semibold text-gray-800 mb-2">
++        对话链接，一秒激活
++      </h2>
++      <p class="text-gray-600 mb-4">
++        使用对话链接，可以让客户在互联网上任何地方直接联系您。
++      </p>
++      <div class="flex flex-col items-center">
++        <input
++          v-model="prewWidgetUrl"
++          type="text"
++          class="p-2 border rounded-lg w-80 text-center mb-4"
++          @click="onCopy"
++        />
++        <p class="text-gray-500">
++          您的专属对话链接（注意：免费试用链接在微信中不可用，如需在微信中使用请升级付费版）
++        </p>
++      </div>
++    </div>
++
++    <!-- QR Code Section -->
++    <div class="flex justify-center mt-6">
++      <img :src="qrCode" alt="QR Code" class="w-40 h-40" />
++    </div>
++
++    <!-- Payment Options -->
++    <div class="mt-6">
++      <h3 class="text-xl font-semibold text-gray-800 mb-2">
++        {{ 选择付费方案 }}
++      </h3>
++      <p class="text-gray-600 mb-4">
++        请选择一个合适的方案，并完成付款后，即可通过您的接入渠道服务客户。我们支持银行卡、支付宝和数字货币支付。
++      </p>
++      <router-link
++        :to="{ name: 'plan_list', params: { accountId: accountId } }"
++      >
++        <Button class="text-blue-500 text-sm" label="选择付费方案" />
++      </router-link>
++    </div>
++  </div>
++</template>
+Index: app/views/devise/mailer/confirmation_instructions.html.erb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/views/devise/mailer/confirmation_instructions.html.erb b/app/views/devise/mailer/confirmation_instructions.html.erb
+--- a/app/views/devise/mailer/confirmation_instructions.html.erb	(revision e8ed7150a9c40ec2e0e649ee3e1babaa044ac11a)
++++ b/app/views/devise/mailer/confirmation_instructions.html.erb	(revision 137ef736d8aa9ebddb5cb1076269b05327e4563e)
+@@ -1,3 +1,4 @@
++<!--todo: change to chinese-->
+ <p>Hi <%= @resource.name %>,</p>
+ 
+ <% account_user = @resource&.account_users&.first %>
+@@ -26,4 +27,4 @@
+   <p><%= link_to 'Confirm my account', frontend_url('auth/password/edit', reset_password_token: @resource.send(:set_reset_password_token)) %></p>
+ <% else %>
+   <p><%= link_to 'Confirm my account', frontend_url('auth/confirmation', confirmation_token: @token) %></p>
+-<% end %>
+\ No newline at end of file
++<% end %>
+Index: app/views/layouts/vueapp.html.erb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/views/layouts/vueapp.html.erb b/app/views/layouts/vueapp.html.erb
+--- a/app/views/layouts/vueapp.html.erb	(revision e8ed7150a9c40ec2e0e649ee3e1babaa044ac11a)
++++ b/app/views/layouts/vueapp.html.erb	(revision bc819d17c7f6ba097ececbcd47423922b32d2d9d)
+@@ -33,6 +33,7 @@
+     <script>
+       window.chatwootConfig = {
+         hostURL: '<%= ENV.fetch('FRONTEND_URL', '') %>',
++        unpaidMessage: '当前为免费试用，仅供测试 付款后此消息自动移除',
+         helpCenterURL: '<%= ENV.fetch('HELPCENTER_URL', '') %>',
+         fbAppId: '<%= @global_config['FB_APP_ID'] %>',
+         instagramAppId: '<%= @global_config['INSTAGRAM_APP_ID'] %>',
+Index: app/javascript/dashboard/assets/images/payment/attention.svg
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/assets/images/payment/attention.svg b/app/javascript/dashboard/assets/images/payment/attention.svg
+new file mode 100644
+--- /dev/null	(revision bc819d17c7f6ba097ececbcd47423922b32d2d9d)
++++ b/app/javascript/dashboard/assets/images/payment/attention.svg	(revision bc819d17c7f6ba097ececbcd47423922b32d2d9d)
+@@ -0,0 +1,11 @@
++<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
++<rect width="16" height="16" rx="4" fill="#FFF4E6"/>
++<g clip-path="url(#clip0_2_84)">
++<path d="M9.1609 4.3266C9.1609 3.7041 8.65315 3.19995 8.0272 3.19995C7.40185 3.19995 6.8938 3.7041 6.8938 4.3266V8.55285C6.8938 9.17535 7.40185 9.6798 8.0272 9.6798C8.65315 9.6798 9.1609 9.1755 9.1609 8.55285V4.3266ZM8.0272 10.5249C7.40185 10.5249 6.8938 11.0289 6.8938 11.6517C6.8938 12.2736 7.40185 12.7781 8.0272 12.7781C8.65315 12.7781 9.1609 12.2738 9.1609 11.6517C9.1609 11.0292 8.65315 10.5249 8.0272 10.5249Z" fill="#FF4501"/>
++</g>
++<defs>
++<clipPath id="clip0_2_84">
++<rect width="9.6" height="9.6" fill="white" transform="translate(3.19995 3.19995)"/>
++</clipPath>
++</defs>
++</svg>
+Index: app/javascript/dashboard/assets/images/payment/pay.svg
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/dashboard/assets/images/payment/pay.svg b/app/javascript/dashboard/assets/images/payment/pay.svg
+new file mode 100644
+--- /dev/null	(revision bc819d17c7f6ba097ececbcd47423922b32d2d9d)
++++ b/app/javascript/dashboard/assets/images/payment/pay.svg	(revision bc819d17c7f6ba097ececbcd47423922b32d2d9d)
+@@ -0,0 +1,11 @@
++<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
++<rect width="16" height="16" rx="4" fill="#E0F2FF"/>
++<g clip-path="url(#clip0_2_88)">
++<path d="M7.97402 3.19995C8.26202 3.19995 8.49881 3.43035 8.52736 3.72555L8.53032 3.78555V4.17387C9.66506 4.32459 10.6122 4.92027 10.9194 5.77947C11.0277 6.08187 10.8825 6.41931 10.595 6.53307C10.3257 6.64011 10.0269 6.51243 9.90088 6.24699L9.87872 6.19179C9.74482 5.81883 9.22101 5.48139 8.53081 5.35707V7.43739C10.1357 7.56987 11.2 8.28603 11.2 9.63915C11.2 10.9923 10.1357 11.708 8.53032 11.8409V12.2144C8.53032 12.5379 8.28122 12.8 7.97402 12.8C7.68603 12.8 7.44923 12.5696 7.42068 12.2744L7.41822 12.2144V11.8337C6.20913 11.6993 5.19254 11.1195 4.84498 10.2656C4.72436 9.96843 4.85482 9.62427 5.13789 9.49755C5.40226 9.37803 5.7065 9.49179 5.84286 9.75147L5.86748 9.80523C6.02501 10.1907 6.63152 10.5406 7.41822 10.6539L7.41772 8.56251C5.85369 8.42715 4.79722 7.68411 4.90208 6.31419C5.00251 5.00043 5.96052 4.29627 7.41772 4.16091V3.78555C7.41772 3.46203 7.66683 3.19995 7.97402 3.19995ZM8.53081 8.61099V10.6668C9.5479 10.5684 10.0875 10.1936 10.0875 9.63915C10.0875 9.08427 9.5479 8.70987 8.53081 8.61099ZM6.01123 6.40779C5.97185 6.92523 6.47202 7.29003 7.41822 7.38843V5.33499C6.52223 5.43531 6.05751 5.80251 6.01123 6.40779Z" fill="#1693FF"/>
++</g>
++<defs>
++<clipPath id="clip0_2_88">
++<rect width="9.6" height="9.6" fill="white" transform="translate(3.19995 3.19995)"/>
++</clipPath>
++</defs>
++</svg>
+Index: public/assets/images/payment/attention.svg
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/public/assets/images/payment/attention.svg b/public/assets/images/payment/attention.svg
+new file mode 100644
+--- /dev/null	(revision bc819d17c7f6ba097ececbcd47423922b32d2d9d)
++++ b/public/assets/images/payment/attention.svg	(revision bc819d17c7f6ba097ececbcd47423922b32d2d9d)
+@@ -0,0 +1,11 @@
++<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
++<rect width="16" height="16" rx="4" fill="#FFF4E6"/>
++<g clip-path="url(#clip0_2_84)">
++<path d="M9.1609 4.3266C9.1609 3.7041 8.65315 3.19995 8.0272 3.19995C7.40185 3.19995 6.8938 3.7041 6.8938 4.3266V8.55285C6.8938 9.17535 7.40185 9.6798 8.0272 9.6798C8.65315 9.6798 9.1609 9.1755 9.1609 8.55285V4.3266ZM8.0272 10.5249C7.40185 10.5249 6.8938 11.0289 6.8938 11.6517C6.8938 12.2736 7.40185 12.7781 8.0272 12.7781C8.65315 12.7781 9.1609 12.2738 9.1609 11.6517C9.1609 11.0292 8.65315 10.5249 8.0272 10.5249Z" fill="#FF4501"/>
++</g>
++<defs>
++<clipPath id="clip0_2_84">
++<rect width="9.6" height="9.6" fill="white" transform="translate(3.19995 3.19995)"/>
++</clipPath>
++</defs>
++</svg>
+Index: public/assets/images/payment/pay.svg
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/public/assets/images/payment/pay.svg b/public/assets/images/payment/pay.svg
+new file mode 100644
+--- /dev/null	(revision bc819d17c7f6ba097ececbcd47423922b32d2d9d)
++++ b/public/assets/images/payment/pay.svg	(revision bc819d17c7f6ba097ececbcd47423922b32d2d9d)
+@@ -0,0 +1,11 @@
++<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
++<rect width="16" height="16" rx="4" fill="#E0F2FF"/>
++<g clip-path="url(#clip0_2_88)">
++<path d="M7.97402 3.19995C8.26202 3.19995 8.49881 3.43035 8.52736 3.72555L8.53032 3.78555V4.17387C9.66506 4.32459 10.6122 4.92027 10.9194 5.77947C11.0277 6.08187 10.8825 6.41931 10.595 6.53307C10.3257 6.64011 10.0269 6.51243 9.90088 6.24699L9.87872 6.19179C9.74482 5.81883 9.22101 5.48139 8.53081 5.35707V7.43739C10.1357 7.56987 11.2 8.28603 11.2 9.63915C11.2 10.9923 10.1357 11.708 8.53032 11.8409V12.2144C8.53032 12.5379 8.28122 12.8 7.97402 12.8C7.68603 12.8 7.44923 12.5696 7.42068 12.2744L7.41822 12.2144V11.8337C6.20913 11.6993 5.19254 11.1195 4.84498 10.2656C4.72436 9.96843 4.85482 9.62427 5.13789 9.49755C5.40226 9.37803 5.7065 9.49179 5.84286 9.75147L5.86748 9.80523C6.02501 10.1907 6.63152 10.5406 7.41822 10.6539L7.41772 8.56251C5.85369 8.42715 4.79722 7.68411 4.90208 6.31419C5.00251 5.00043 5.96052 4.29627 7.41772 4.16091V3.78555C7.41772 3.46203 7.66683 3.19995 7.97402 3.19995ZM8.53081 8.61099V10.6668C9.5479 10.5684 10.0875 10.1936 10.0875 9.63915C10.0875 9.08427 9.5479 8.70987 8.53081 8.61099ZM6.01123 6.40779C5.97185 6.92523 6.47202 7.29003 7.41822 7.38843V5.33499C6.52223 5.43531 6.05751 5.80251 6.01123 6.40779Z" fill="#1693FF"/>
++</g>
++<defs>
++<clipPath id="clip0_2_88">
++<rect width="9.6" height="9.6" fill="white" transform="translate(3.19995 3.19995)"/>
++</clipPath>
++</defs>
++</svg>
+Index: app/javascript/shared/components/UnpaidMessage.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/shared/components/UnpaidMessage.vue b/app/javascript/shared/components/UnpaidMessage.vue
+new file mode 100644
+--- /dev/null	(revision c43067d1983fcba1d47f1bb77dee2d31dba0147a)
++++ b/app/javascript/shared/components/UnpaidMessage.vue	(revision c43067d1983fcba1d47f1bb77dee2d31dba0147a)
+@@ -0,0 +1,16 @@
++<template>
++  <span class="inline-flex items-center">
++    <img
++      src="dashboard/assets/images/payment/attention.svg"
++      class="w-4 h-4"
++    />
++    当前为免费试用，仅供参考
++  </span>
++  <span class="inline-flex items-center">
++    <img
++      src="dashboard/assets/images/payment/pay.svg"
++      class="w-4 h-4"
++    />
++    付费购买后消息自动移除
++  </span>
++</template>
+Index: app/javascript/widget/App.vue
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/javascript/widget/App.vue b/app/javascript/widget/App.vue
+--- a/app/javascript/widget/App.vue	(revision 7c9f62c6fdf867eaf6bb39fd0ce2a7a13ccf751f)
++++ b/app/javascript/widget/App.vue	(revision ad899ea55ef44b0dea6706443eaaf3c6c00b84d8)
+@@ -87,6 +87,7 @@
+       this.registerListeners();
+       this.sendLoadedEvent();
+     } else {
++      this.$store.dispatch('contacts/get');
+       this.fetchOldConversations();
+       this.fetchAvailableAgents(websiteToken);
+       this.setLocale(getLocale(window.location.search));
+diff --git a/app/javascript/dashboard/assets/images/logo.png b/app/javascript/dashboard/assets/images/logo.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..f2835f596c98ca3a414838acbccdeccff48762ac
+GIT binary patch
+literal 5373
+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
+HgNXkD*$x{{
+

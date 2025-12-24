@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_11_19_161025) do
+ActiveRecord::Schema[7.1].define(version: 2025_12_15_124958) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -73,6 +73,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_19_161025) do
     t.integer "status", default: 0
     t.jsonb "internal_attributes", default: {}, null: false
     t.jsonb "settings", default: {}
+    t.boolean "paid", default: false
+    t.datetime "paid_at"
+    t.datetime "paid_until"
     t.index ["status"], name: "index_accounts_on_status"
   end
 
@@ -1032,6 +1035,19 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_19_161025) do
     t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
+  create_table "orders", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "payment_type"
+    t.decimal "amount"
+    t.string "status"
+    t.string "payment_address"
+    t.string "order_type"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "account_id"
+    t.string "currency"
+    t.index ["account_id"], name: "index_orders_on_account_id"
+  end
+
   create_table "platform_app_permissibles", force: :cascade do |t|
     t.bigint "platform_app_id", null: false
     t.string "permissible_type", null: false
@@ -1216,6 +1232,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_19_161025) do
     t.integer "consumed_timestep"
     t.boolean "otp_required_for_login", default: false
     t.text "otp_backup_codes"
+    t.boolean "paid", default: false
     t.index ["email"], name: "index_users_on_email"
     t.index ["otp_required_for_login"], name: "index_users_on_otp_required_for_login"
     t.index ["otp_secret"], name: "index_users_on_otp_secret", unique: true
@@ -1255,6 +1272,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_19_161025) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "inboxes", "portals"
+  add_foreign_key "orders", "accounts"
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").
       after(:insert).

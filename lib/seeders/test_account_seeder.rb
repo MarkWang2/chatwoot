@@ -1,0 +1,70 @@
+## Class to generate sample data for a chatwoot test @Account.
+############################################################
+### Usage #####
+#
+#   # Seed an account with all data types in this class
+#   Seeders::AccountSeeder.new(account: Account.find(1)).perform!
+#
+
+# Seeders::TestAccountSeeder.new(account, user).perform!
+
+############################################################
+
+class Seeders::TestAccountSeeder
+  attr_reader :account, :user
+  def initialize(account:, user:)
+    @account = account
+    @user = user
+  end
+
+  def perform!
+    seed_website_inbox
+  end
+
+  def seed_website_inbox
+    binding.pry
+
+    # channel = Channel::WebWidget.create!(account: @account, website_url: "http://localhost:3000")
+    # Inbox.create!(channel: channel, account: @account, name: "Test Website")
+    web_widget = Channel::WebWidget.create!(account: account, website_url: 'http://localhost:3000')
+
+    inbox = Inbox.create!(channel: web_widget, account: account, name: 'test Support3')
+    InboxMember.create!(user: user, inbox: inbox)
+
+    contact_inbox = ContactInboxWithContactBuilder.new(
+      source_id: user.id,
+      inbox: inbox,
+      hmac_verified: true,
+      # todo: use user email
+      contact_attributes: { name: 'jane', email: 'jane@example.com', phone_number: '+2320000' }
+    ).perform
+
+    conversation = Conversation.create!(
+      account: account,
+      inbox: inbox,
+      status: :open,
+      assignee: user,
+      contact: contact_inbox.contact,
+      contact_inbox: contact_inbox,
+      additional_attributes: {}
+    )
+
+    # sample email collect
+    # Seeders::MessageSeeder.create_sample_email_collect_message conversation
+
+    # Message.create!(content: 'Hello', account: account, inbox: inbox, conversation: conversation, sender: contact_inbox.contact,
+    #                 message_type: :incoming)
+    # # sample card
+    # Seeders::MessageSeeder.create_sample_cards_message conversation
+    # # input select
+    # Seeders::MessageSeeder.create_sample_input_select_message conversation
+    # # form
+    # Seeders::MessageSeeder.create_sample_form_message conversation
+    # # articles
+    # Seeders::MessageSeeder.create_sample_articles_message conversation
+    # # csat
+    # Seeders::MessageSeeder.create_sample_csat_collect_message conversation
+    #
+    # CannedResponse.create!(account: account, short_code: 'start', content: 'Hello welcome to.')
+  end
+end

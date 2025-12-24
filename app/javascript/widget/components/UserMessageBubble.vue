@@ -1,6 +1,7 @@
 <script>
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { getContrastingTextColor } from '@chatwoot/utils';
+import { mapGetters } from 'vuex';
 
 export default {
   name: 'UserMessageBubble',
@@ -21,8 +22,14 @@ export default {
     };
   },
   computed: {
+    ...mapGetters({
+      currentUser: 'contacts/getCurrentUser',
+    }),
     textColor() {
       return getContrastingTextColor(this.widgetColor);
+    },
+    customMessage() {
+      return this.formatMessage(this.message, false);
     },
   },
 };
@@ -30,7 +37,7 @@ export default {
 
 <template>
   <div
-    v-dompurify-html="formatMessage(message, false)"
+    v-dompurify-html="customMessage"
     class="chat-bubble user"
     :style="{ background: widgetColor, color: textColor }"
   />

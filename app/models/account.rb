@@ -11,6 +11,9 @@
 #  limits                :jsonb
 #  locale                :integer          default("en")
 #  name                  :string           not null
+#  paid                  :boolean          default(FALSE)
+#  paid_at               :datetime
+#  paid_until            :datetime
 #  settings              :jsonb
 #  status                :integer          default("active")
 #  support_email         :string(100)
@@ -28,6 +31,8 @@ class Account < ApplicationRecord
   include Reportable
   include Featurable
   include CacheKeys
+
+  has_and_belongs_to_many :orders, join_table: :accounts_orders
 
   SETTINGS_PARAMS_SCHEMA = {
     'type': 'object',

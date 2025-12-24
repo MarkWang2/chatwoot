@@ -28,6 +28,10 @@ export const getters = {
     return $state.currentUser.id;
   },
 
+  getPaid($state) {
+    return $state.currentUser.paid;
+  },
+
   getUISettings($state) {
     return $state.currentUser.ui_settings || {};
   },
